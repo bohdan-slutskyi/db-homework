@@ -1,0 +1,13 @@
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# SQL temp / exports
+*.tmp
+*.bak
+*.backup
+*.csv
+*.xlsx

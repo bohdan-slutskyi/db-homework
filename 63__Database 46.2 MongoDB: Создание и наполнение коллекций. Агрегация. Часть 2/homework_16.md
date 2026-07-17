@@ -10,7 +10,9 @@
 
 ## 1. Найти средний возраст в `ich.US_Adult_Income`
 
-**Полная агрегация после экспорта в Python:**
+**Условие:** найдите средний возраст из коллекции `ich.US_Adult_Income`.
+
+**Решение:**
 
 ```python
 result = client['ich']['US_Adult_Income'].aggregate([
@@ -27,7 +29,22 @@ result = client['ich']['US_Adult_Income'].aggregate([
 
 ## 2. Создать и заполнить коллекцию `060326-ptm_orders_slutskyi`
 
+**Условие:** поменяв подключение к базе данных, создайте уникальную коллекцию `060326-ptm_orders_slutskyi` со свойствами `id`, `customer`, `product`, `amount`, `city`, используя следующие данные:
+
+| id | customer | product | amount | city |
+|---:|---|---|---:|---|
+| 1 | Olga | Apple | 15.55 | Berlin |
+| 2 | Anna | Apple | 10.05 | Madrid |
+| 3 | Olga | Kiwi | 9.6 | Berlin |
+| 4 | Anton | Apple | 20 | Roma |
+| 5 | Olga | Banana | 8 | Madrid |
+| 6 | Petr | Orange | 18.3 | Paris |
+
+**Решение:**
+
 ```javascript
+use ich_edit
+
 db["060326-ptm_orders_slutskyi"].insertMany([
   { id: 1, customer: "Olga", product: "Apple", amount: 15.55, city: "Berlin" },
   { id: 2, customer: "Anna", product: "Apple", amount: 10.05, city: "Madrid" },
@@ -40,7 +57,9 @@ db["060326-ptm_orders_slutskyi"].insertMany([
 
 ## 3. Найти общее количество покупок
 
-**Полная агрегация после экспорта в Python:**
+**Условие:** найдите, сколько всего было совершено покупок.
+
+**Решение:**
 
 ```python
 result = client['ich_edit']['060326-ptm_orders_slutskyi'].aggregate([
@@ -52,7 +71,9 @@ result = client['ich_edit']['060326-ptm_orders_slutskyi'].aggregate([
 
 ## 4. Найти, сколько раз были куплены яблоки
 
-**Полная агрегация после экспорта в Python:**
+**Условие:** найдите, сколько всего раз были куплены яблоки.
+
+**Решение:**
 
 ```python
 result = client['ich_edit']['060326-ptm_orders_slutskyi'].aggregate([
@@ -69,7 +90,9 @@ result = client['ich_edit']['060326-ptm_orders_slutskyi'].aggregate([
 
 ## 5. Вывести идентификаторы трёх самых дорогих покупок
 
-**Полная агрегация после экспорта в Python:**
+**Условие:** выведите идентификаторы трёх самых дорогих покупок.
+
+**Решение:**
 
 ```python
 result = client['ich_edit']['060326-ptm_orders_slutskyi'].aggregate([
@@ -93,7 +116,9 @@ result = client['ich_edit']['060326-ptm_orders_slutskyi'].aggregate([
 
 ## 6. Найти количество покупок, совершённых в Берлине
 
-**Полная агрегация после экспорта в Python:**
+**Условие:** найдите, сколько всего покупок было совершено в Берлине.
+
+**Решение:**
 
 ```python
 result = client['ich_edit']['060326-ptm_orders_slutskyi'].aggregate([
@@ -110,7 +135,9 @@ result = client['ich_edit']['060326-ptm_orders_slutskyi'].aggregate([
 
 ## 7. Найти количество покупок яблок в Берлине и Мадриде
 
-**Полная агрегация после экспорта в Python:**
+**Условие:** найдите количество покупок яблок в городах Берлин и Мадрид.
+
+**Решение:**
 
 ```python
 result = client['ich_edit']['060326-ptm_orders_slutskyi'].aggregate([
@@ -133,7 +160,11 @@ result = client['ich_edit']['060326-ptm_orders_slutskyi'].aggregate([
 
 ## 8. Найти, сколько было потрачено каждым покупателем
 
-**Полная агрегация после экспорта в Python:**
+**Условие:** найдите, сколько было потрачено каждым покупателем.
+
+**Подсказка из задания:** используйте `$group` и `total: { $sum: "$amount" }`.
+
+**Решение:**
 
 ```python
 result = client['ich_edit']['060326-ptm_orders_slutskyi'].aggregate([
@@ -150,7 +181,11 @@ result = client['ich_edit']['060326-ptm_orders_slutskyi'].aggregate([
 
 ## 9. Найти города, в которых Ольга совершала покупки
 
-**Полная агрегация после экспорта в Python:**
+**Условие:** найдите, в каких городах совершала покупки Ольга.
+
+**Подсказка из задания:** используйте `$match` по `customer: "Olga"` и `$group` по `_id: "$city"`.
+
+**Решение:**
 
 ```python
 result = client['ich_edit']['060326-ptm_orders_slutskyi'].aggregate([

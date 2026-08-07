@@ -1,10 +1,11 @@
 // Из базы данных ich работаем с коллекцией ich.Spotify_Youtube:
 
-// 1. Найдите трек с наивысшими показателями Danceability и Energy (в сумме)
+/* 1. Найдите трек с наивысшими показателями Danceability и Energy (в сумме) */
 
-# Источник: ../materials/theory_06__$set_vs_$addField.md — вычисляемое поле через `$set`;
-# ../../55__Database 40.2 Знакомство с mongoDB. Часть 2/materials/theory_08__math_operations.md — `$add`;
-# ../../63__Database 46.2 MongoDB: Создание и наполнение коллекций. Агрегация. Часть 2/materials/theory_04__aggregation_all_stages.md — `$sort`, `$limit`, `$project`.
+Создаём поле с суммой `Danceability` и `Energy`, сортируем по нему по убыванию
+и оставляем один трек с максимальным результатом.
+
+```python
 result = client['ich']['Spotify_Youtube'].aggregate([
     {
         '$set': {
@@ -32,14 +33,19 @@ result = client['ich']['Spotify_Youtube'].aggregate([
         }
     }
 ])
+```
 
-# Ответ в Compass: Miranda! — `Yo Te Diré`; Danceability = 0.917, Energy = 0.98,
-# их сумма = 1.897.
+Проверка в MongoDB Compass: Miranda! — `Yo Te Diré`; Danceability = `0.917`,
+Energy = `0.98`, их сумма = `1.897`.
 
-// 2. У какого трека (но не compilation) самая большая длительность?
+> Источник: `../materials/theory_06__$set_vs_$addField.md` — вычисляемое поле через `$set`; `../../55__Database 40.2 Знакомство с mongoDB. Часть 2/materials/theory_08__math_operations.md` — `$add`; `../../63__Database 46.2 MongoDB: Создание и наполнение коллекций. Агрегация. Часть 2/materials/theory_04__aggregation_all_stages.md` — `$sort`, `$limit`, `$project`.
 
-# Источник: ../../55__Database 40.2 Знакомство с mongoDB. Часть 2/materials/theory_07__logical_operations.md — `$ne`;
-# ../../63__Database 46.2 MongoDB: Создание и наполнение коллекций. Агрегация. Часть 2/materials/theory_04__aggregation_all_stages.md — `$match`, `$sort`, `$limit`, `$project`.
+/* 2. У какого трека (но не compilation) самая большая длительность? */
+
+Исключаем альбомы типа `compilation`, сортируем оставшиеся треки по
+`Duration_ms` по убыванию и оставляем первый результат.
+
+```python
 result = client['ich']['Spotify_Youtube'].aggregate([
     {
         '$match': {
@@ -67,14 +73,19 @@ result = client['ich']['Spotify_Youtube'].aggregate([
         }
     }
 ])
+```
 
-# Ответ в Compass: Ocean Waves For Sleep — `Ocean Waves for Sleep` из сингла `Ocean Waves`;
-# Duration_ms = 4120258.
+Проверка в MongoDB Compass: Ocean Waves For Sleep — `Ocean Waves for Sleep`
+из сингла `Ocean Waves`; Duration_ms = `4120258`.
 
-// 3. В каком одном альбоме самое большее количество треков?
+> Источник: `../../55__Database 40.2 Знакомство с mongoDB. Часть 2/materials/theory_07__logical_operations.md` — `$ne`; `../../63__Database 46.2 MongoDB: Создание и наполнение коллекций. Агрегация. Часть 2/materials/theory_04__aggregation_all_stages.md` — `$match`, `$sort`, `$limit`, `$project`.
 
-# Источник: ../../63__Database 46.2 MongoDB: Создание и наполнение коллекций. Агрегация. Часть 2/materials/theory_04__aggregation_all_stages.md — `$group`, `$sort`, `$limit`, `$project`;
-# ../../63__Database 46.2 MongoDB: Создание и наполнение коллекций. Агрегация. Часть 2/materials/theory_05__some_aggregation_functions.md — `$sum`.
+/* 3. В каком одном альбоме самое большее количество треков? */
+
+Группируем документы по названию альбома, считаем треки в каждой группе,
+сортируем по количеству по убыванию и оставляем один альбом.
+
+```python
 result = client['ich']['Spotify_Youtube'].aggregate([
     {
         '$group': {
@@ -100,13 +111,19 @@ result = client['ich']['Spotify_Youtube'].aggregate([
         }
     }
 ])
+```
 
-# Ответ в Compass: альбом `Greatest Hits`, 30 треков.
+Проверка в MongoDB Compass: альбом `Greatest Hits`, `30` треков.
+
+> Источник: `../../63__Database 46.2 MongoDB: Создание и наполнение коллекций. Агрегация. Часть 2/materials/theory_04__aggregation_all_stages.md` — `$group`, `$sort`, `$limit`, `$project`; `../../63__Database 46.2 MongoDB: Создание и наполнение коллекций. Агрегация. Часть 2/materials/theory_05__some_aggregation_functions.md` — `$sum`.
 
 /* 4. Сколько просмотров видео на youtube у трека
 с самым высоким количеством прослушиваний на spotify (Stream)? */
 
-# Источник: ../../63__Database 46.2 MongoDB: Создание и наполнение коллекций. Агрегация. Часть 2/materials/theory_04__aggregation_all_stages.md — `$sort`, `$limit`, `$project`.
+Сортируем треки по числу прослушиваний `Stream` по убыванию, оставляем один
+трек и выводим число его просмотров `Views`.
+
+```python
 result = client['ich']['Spotify_Youtube'].aggregate([
     {
         '$sort': {
@@ -126,18 +143,21 @@ result = client['ich']['Spotify_Youtube'].aggregate([
         }
     }
 ])
+```
 
-# Ответ в Compass: The Weeknd — `Blinding Lights`; Stream = 3386520288,
-# Views = 674164500.
+Проверка в MongoDB Compass: The Weeknd — `Blinding Lights`; Stream =
+`3386520288`, Views = `674164500`.
+
+> Источник: `../../63__Database 46.2 MongoDB: Создание и наполнение коллекций. Агрегация. Часть 2/materials/theory_04__aggregation_all_stages.md` — `$sort`, `$limit`, `$project`.
 
 /* 5. Экспортируйте 20 самых популярных (прослушивания или просмотры) треков
 по версиям youtube и spotify и импортируйте в базу ich_edit их
 с именами top20youtube и top20spotify, и добавьте им свои имена для уникальности. */
 
-# Источник: ../../63__Database 46.2 MongoDB: Создание и наполнение коллекций. Агрегация. Часть 2/materials/theory_04__aggregation_all_stages.md — `$out`, `$sort`, `$limit`.
-# Эти pipeline записывают результат в `ich_edit`, а суффикс `bohdan_slutskyi` делает имена коллекций уникальными.
+Сортируем треки по просмотрам или прослушиваниям, оставляем первые `20` и
+сохраняем результат в уникальные коллекции базы `ich_edit`.
 
-# 20 самых популярных треков по просмотрам YouTube.
+```python
 youtube_result = client['ich']['Spotify_Youtube'].aggregate([
     {
         '$sort': {
@@ -155,7 +175,6 @@ youtube_result = client['ich']['Spotify_Youtube'].aggregate([
     }
 ])
 
-# 20 самых популярных треков по прослушиваниям Spotify.
 spotify_result = client['ich']['Spotify_Youtube'].aggregate([
     {
         '$sort': {
@@ -172,3 +191,6 @@ spotify_result = client['ich']['Spotify_Youtube'].aggregate([
         }
     }
 ])
+```
+
+> Источник: `../../63__Database 46.2 MongoDB: Создание и наполнение коллекций. Агрегация. Часть 2/materials/theory_04__aggregation_all_stages.md` — `$out`, `$sort`, `$limit`.

@@ -1,0 +1,17 @@
+[project]
+name = "film-search-homework-next3"
+version = "0.1.0"
+description = "Film Search Project with FastAPI, MySQL Sakila, and MongoDB."
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "jinja2",
+    "mysql-connector-python",
+    "pymongo",
+    "python-multipart",
+    "uvicorn",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

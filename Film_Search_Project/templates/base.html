@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Film Search Project{% endblock %}</title>
+    <script>
+        (() => {
+            const storageKey = "film-search-theme";
+            const validThemes = ["light", "dark", "system"];
+            const savedTheme = localStorage.getItem(storageKey);
+            const theme = validThemes.includes(savedTheme) ? savedTheme : "system";
+            const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            const resolvedTheme = theme === "system" ? (prefersDark ? "dark" : "light") : theme;
+
+            document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
+            document.documentElement.dataset.theme = theme;
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        cream: "#f7f1e8",
+                        sand: "#efe3d2",
+                        plum: "#7c3aed",
+                        aubergine: "#4c1d95",
+                        charcoal: "#19161f",
+                        ink: "#2f2438",
+                    },
+                    boxShadow: {
+                        soft: "0 18px 40px -24px rgba(76, 29, 149, 0.28)",
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        :root {
+            color-scheme: light;
+            --page-bg: #f7f1e8;
+            --text-main: #2f2438;
+        }
+
+        .dark {
+            color-scheme: dark;
+            --page-bg: #19161f;
+            --text-main: #f7f2ff;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(167, 139, 250, 0.18), transparent 32%),
+                radial-gradient(circle at top right, rgba(251, 191, 36, 0.14), transparent 28%),
+                linear-gradient(180deg, var(--page-bg) 0%, color-mix(in srgb, var(--page-bg) 88%, #ffffff 12%) 100%);
+            color: var(--text-main);
+        }
+
+        a {
+            color: inherit;
+        }
+    </style>
+</head>
+<body class="min-h-screen antialiased">
+    <div class="relative min-h-screen">
+        <div class="absolute inset-x-0 top-0 -z-10 h-72 bg-gradient-to-b from-purple-200/50 via-amber-100/20 to-transparent dark:from-purple-950/35 dark:via-transparent dark:to-transparent"></div>
+
+        <nav class="border-b border-white/50 bg-white/70 backdrop-blur-xl dark:border-white/10 dark:bg-charcoal/80">
+            <div class="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <a href="{{ url_for('index') }}" class="flex items-center gap-3 no-underline">
+                        <span class="flex h-11 w-11 items-center justify-center rounded-2xl border border-fuchsia-200/60 bg-gradient-to-br from-violet-300 via-fuchsia-300 to-rose-300 text-lg font-bold text-violet-950 shadow-soft dark:border-fuchsia-300/20 dark:bg-gradient-to-br dark:from-fuchsia-950/95 dark:via-violet-950/95 dark:to-rose-950/95 dark:text-fuchsia-50 dark:shadow-none">
+                            F
+                        </span>
+                        <span class="block">
+                            <span class="block text-lg font-semibold tracking-tight text-ink dark:text-white">Film Search</span>
+                            <span class="block text-sm text-stone-600 dark:text-purple-100/75 sm:text-base">Поиск фильмов в каталоге базы Sakila · IT Career Hub</span>
+                        </span>
+                    </a>
+
+                    <div class="flex flex-wrap items-center gap-2 rounded-full border border-purple-200/70 bg-white/80 p-1 shadow-soft dark:border-white/10 dark:bg-white/5">
+                        <button
+                            type="button"
+                            data-theme-value="light"
+                            class="theme-toggle rounded-full px-4 py-2 text-sm font-medium text-stone-600 transition hover:bg-purple-100 hover:text-purple-900 dark:text-purple-100/80 dark:hover:bg-white/10 dark:hover:text-white"
+                        >
+                            Светлая
+                        </button>
+                        <button
+                            type="button"
+                            data-theme-value="dark"
+                            class="theme-toggle rounded-full px-4 py-2 text-sm font-medium text-stone-600 transition hover:bg-purple-100 hover:text-purple-900 dark:text-purple-100/80 dark:hover:bg-white/10 dark:hover:text-white"
+                        >
+                            Тёмная
+                        </button>
+                        <button
+                            type="button"
+                            data-theme-value="system"
+                            class="theme-toggle rounded-full px-4 py-2 text-sm font-medium text-stone-600 transition hover:bg-purple-100 hover:text-purple-900 dark:text-purple-100/80 dark:hover:bg-white/10 dark:hover:text-white"
+                        >
+                            Системная
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        (() => {
+            const storageKey = "film-search-theme";
+            const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+            const buttons = document.querySelectorAll("[data-theme-value]");
+
+            const getSavedTheme = () => {
+                const savedTheme = localStorage.getItem(storageKey);
+                return ["light", "dark", "system"].includes(savedTheme) ? savedTheme : "system";
+            };
+
+            const applyTheme = (theme) => {
+                const resolvedTheme = theme === "system"
+                    ? (mediaQuery.matches ? "dark" : "light")
+                    : theme;
+
+                document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
+                document.documentElement.dataset.theme = theme;
+
+                buttons.forEach((button) => {
+                    const isActive = button.dataset.themeValue === theme;
+
+                    button.classList.toggle("border", isActive);
+                    button.classList.toggle("border-fuchsia-200/60", isActive);
+                    button.classList.toggle("bg-gradient-to-r", isActive);
+                    button.classList.toggle("from-violet-300", isActive);
+                    button.classList.toggle("via-fuchsia-300", isActive);
+                    button.classList.toggle("to-rose-300", isActive);
+                    button.classList.toggle("text-violet-950", isActive);
+                    button.classList.toggle("shadow-soft", isActive);
+                    button.classList.toggle("dark:border-fuchsia-300/20", isActive);
+                    button.classList.toggle("dark:from-fuchsia-950/95", isActive);
+                    button.classList.toggle("dark:via-violet-950/95", isActive);
+                    button.classList.toggle("dark:to-rose-950/95", isActive);
+                    button.classList.toggle("dark:text-fuchsia-50", isActive);
+                    button.classList.toggle("dark:shadow-none", isActive);
+                    button.classList.toggle("text-stone-600", !isActive);
+                    button.classList.toggle("dark:text-purple-100/80", !isActive);
+                });
+            };
+
+            const setTheme = (theme) => {
+                localStorage.setItem(storageKey, theme);
+                applyTheme(theme);
+            };
+
+            buttons.forEach((button) => {
+                button.addEventListener("click", () => {
+                    setTheme(button.dataset.themeValue);
+                });
+            });
+
+            applyTheme(getSavedTheme());
+
+            mediaQuery.addEventListener("change", () => {
+                if (getSavedTheme() === "system") {
+                    applyTheme("system");
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1453 @@
+{% extends "base.html" %}
+
+{% block title %}Главная | Film Search Project{% endblock %}
+
+{% block content %}
+{% set active_filter_count = 0 %}
+{% if keyword %}{% set active_filter_count = active_filter_count + 1 %}{% endif %}
+{% if actor_id %}{% set active_filter_count = active_filter_count + 1 %}{% endif %}
+{% if genre %}{% set active_filter_count = active_filter_count + 1 %}{% endif %}
+{% if exact_year %}{% set active_filter_count = active_filter_count + 1 %}{% endif %}
+{% if rating %}{% set active_filter_count = active_filter_count + 1 %}{% endif %}
+{% if rental_rate %}{% set active_filter_count = active_filter_count + 1 %}{% endif %}
+{% if length_group %}{% set active_filter_count = active_filter_count + 1 %}{% endif %}
+{% if year_from %}{% set active_filter_count = active_filter_count + 1 %}{% endif %}
+{% if year_to %}{% set active_filter_count = active_filter_count + 1 %}{% endif %}
+{% set filters_expanded = actor_id or genre or exact_year or rating or rental_rate or length_group or year_from or year_to %}
+{% set collapsed_filters_label = "Показать фильтры" %}
+{% if active_filter_count > 0 %}
+    {% set collapsed_filters_label = "Показать фильтры · " ~ active_filter_count %}
+{% endif %}
+{% set expanded_filters_label = "Скрыть фильтры" %}
+<style>
+    #homepage-film-rail {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    #homepage-film-rail::-webkit-scrollbar {
+        display: none;
+    }
+</style>
+<section class="-mt-2 space-y-4 md:-mt-3">
+    <div class="overflow-hidden rounded-[28px] border border-purple-200/70 bg-white/80 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/70">
+        {% if not has_catalog_query %}
+            <div class="border-b border-purple-100 bg-gradient-to-r from-white/80 via-purple-50/80 to-amber-50/70 px-6 py-6 dark:border-white/10 dark:from-slate-900 dark:via-purple-950/70 dark:to-slate-950 md:px-8 md:py-7">
+                <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+                    <div class="max-w-3xl space-y-4">
+                        <div class="space-y-3">
+                            <h1 class="text-3xl font-semibold tracking-tight text-ink dark:text-white md:text-5xl">
+                                Единая панель поиска фильмов в коллекции Sakila
+                            </h1>
+                            <p class="max-w-2xl text-sm leading-7 text-stone-600 dark:text-purple-100/75 md:text-base">
+                                Сначала ищите по ключевому слову, затем при необходимости сужайте выборку по жанру и диапазону лет. Ниже доступны быстрые переходы по сохранённым запросам.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-3 sm:grid-cols-2 xl:min-w-[23rem]">
+                        <div class="rounded-2xl border border-purple-200/80 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-slate-900/80">
+                            <p class="text-xs uppercase tracking-[0.18em] text-stone-500 dark:text-purple-100/55">
+                                Жанров доступно
+                            </p>
+                            <p class="mt-2 text-lg font-semibold text-ink dark:text-white">
+                                {{ categories|length }}
+                            </p>
+                        </div>
+                        <div class="rounded-2xl border border-purple-200/80 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-slate-900/80">
+                            <p class="text-xs uppercase tracking-[0.18em] text-stone-500 dark:text-purple-100/55">
+                                Годы выпуска
+                            </p>
+                            <p class="mt-2 text-lg font-semibold text-ink dark:text-white">
+                                {% if year_min and year_max %}
+                                    {{ year_min }} - {{ year_max }}
+                                {% else %}
+                                    Не указаны
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="px-5 py-3 md:px-7 {% if has_catalog_query %}md:py-4{% else %}md:py-6{% endif %}">
+            <div class="rounded-[24px] border border-stone-200/80 bg-gradient-to-br from-white via-stone-50/95 to-rose-50/80 p-[1px] shadow-soft dark:border-white/10 dark:bg-gradient-to-br dark:from-zinc-950 dark:via-slate-900 dark:to-purple-950">
+                <div class="rounded-[23px] bg-gradient-to-br from-white via-stone-50/90 to-rose-50/80 p-3 text-ink sm:p-3.5 {% if has_catalog_query %}lg:p-3{% else %}lg:p-4.5{% endif %} dark:bg-gradient-to-br dark:from-zinc-950 dark:via-slate-950 dark:to-purple-950/95 dark:text-white">
+                    <div class="{% if has_catalog_query %}space-y-2{% else %}space-y-4{% endif %}">
+                        <div class="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
+                            {% if not has_catalog_query %}
+                                <div class="space-y-1.5">
+                                    <h2 class="text-2xl font-semibold tracking-tight text-ink md:text-3xl dark:text-white">
+                                        Что хотите найти сегодня?
+                                    </h2>
+                                </div>
+                                <div class="flex flex-wrap gap-2 text-xs font-medium text-stone-600 dark:text-slate-200/80">
+                                    <span class="inline-flex items-center rounded-full border border-stone-200/80 bg-white/90 px-3 py-1.5 dark:border-white/10 dark:bg-slate-900/75">
+                                        Ключевое слово
+                                    </span>
+                                    <span class="inline-flex items-center rounded-full border border-stone-200/80 bg-stone-100/80 px-3 py-1.5 text-stone-700 dark:border-white/10 dark:bg-slate-900/75 dark:text-slate-200">
+                                        Жанр
+                                    </span>
+                                    <span class="inline-flex items-center rounded-full border border-stone-200/80 bg-stone-100/80 px-3 py-1.5 text-stone-700 dark:border-white/10 dark:bg-slate-900/75 dark:text-slate-200">
+                                        Годы выпуска
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <form id="catalog-search-form" action="{{ url_for('index') }}" method="get" class="space-y-1.5">
+                                <input type="hidden" name="search_submitted" value="1">
+                                <div class="grid gap-2 lg:grid-cols-[minmax(0,1fr)] lg:items-center">
+                                    <label for="keyword" class="block">
+                                        <span class="sr-only">
+                                            Поиск по названию фильма
+                                        </span>
+                                        <span id="keyword-field-shell" class="flex min-h-[2.65rem] items-center gap-2 rounded-[15px] border border-stone-200/80 bg-white/95 px-3 py-1 shadow-soft transition focus-within:border-fuchsia-200/80 focus-within:bg-white focus-within:ring-2 focus-within:ring-fuchsia-200/30 dark:border-white/10 dark:bg-slate-900/80 dark:shadow-2xl dark:shadow-black/20 dark:focus-within:border-fuchsia-300/25 dark:focus-within:bg-slate-900 dark:focus-within:ring-fuchsia-300/10">
+                                            <span class="flex h-7 w-7 items-center justify-center rounded-[9px] bg-stone-100 text-stone-600 dark:bg-slate-800/90 dark:text-slate-200">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0a7 7 0 0114 0z"></path>
+                                                </svg>
+                                            </span>
+                                            <input
+                                                type="text"
+                                                id="keyword"
+                                                name="keyword"
+                                                value="{{ keyword }}"
+                                                placeholder="Название фильма"
+                                                class="w-full border-0 bg-transparent p-0 text-base text-ink outline-none placeholder:text-stone-400 focus:ring-0 dark:text-white dark:placeholder:text-slate-400"
+                                            >
+                                            <button
+                                                type="button"
+                                                id="filters-toggle-compact"
+                                                class="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[9px] text-stone-500 transition hover:bg-stone-100 hover:text-stone-700 dark:text-slate-300 dark:hover:bg-slate-800/90 dark:hover:text-white"
+                                                aria-controls="advanced-filters-panel"
+                                                aria-expanded="{% if filters_expanded %}true{% else %}false{% endif %}"
+                                                aria-label="{% if filters_expanded %}Скрыть фильтры{% else %}Показать фильтры{% endif %}"
+                                                title="{% if filters_expanded %}Скрыть фильтры{% else %}Показать фильтры{% endif %}"
+                                            >
+                                                <svg id="filters-toggle-compact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4 transition {% if filters_expanded %}rotate-180{% endif %}">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6l6-6"></path>
+                                                </svg>
+                                            </button>
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <div
+                                    id="advanced-filters-panel"
+                                    class="rounded-[20px] border border-stone-200/80 bg-white/80 p-3 shadow-soft dark:border-white/10 dark:bg-slate-950/55 {% if not filters_expanded %}hidden{% endif %}"
+                                >
+                                    <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
+                                        <label for="genre" class="space-y-1">
+                                            <span class="sr-only">
+                                                Жанр
+                                            </span>
+                                            <select
+                                                id="genre"
+                                                name="genre"
+                                                class="w-full rounded-xl border border-stone-200/80 bg-white/95 px-3.5 py-2 text-sm text-ink outline-none transition focus:border-fuchsia-200/80 focus:ring-2 focus:ring-fuchsia-200/30 dark:border-white/10 dark:bg-slate-950/90 dark:text-white dark:focus:border-fuchsia-300/25 dark:focus:ring-fuchsia-300/10"
+                                            >
+                                                <option value="">Жанр</option>
+                                                {% for category in categories %}
+                                                    <option value="{{ category }}" {% if genre == category %}selected{% endif %}>{{ category }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </label>
+
+                                        <label for="actor_id" class="space-y-1">
+                                            <span class="sr-only">
+                                                Актёр
+                                            </span>
+                                            <select
+                                                id="actor_id"
+                                                name="actor_id"
+                                                class="w-full rounded-xl border border-stone-200/80 bg-white/95 px-3.5 py-2 text-sm text-ink outline-none transition focus:border-fuchsia-200/80 focus:ring-2 focus:ring-fuchsia-200/30 dark:border-white/10 dark:bg-slate-950/90 dark:text-white dark:focus:border-fuchsia-300/25 dark:focus:ring-fuchsia-300/10"
+                                            >
+                                                <option value="">Актёр</option>
+                                                {% for choice_actor_id, first_name, last_name in actor_choices %}
+                                                    <option value="{{ choice_actor_id }}" {% if actor_id == choice_actor_id|string %}selected{% endif %}>{{ first_name }} {{ last_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </label>
+
+                                        <label for="rating" class="space-y-1">
+                                            <span class="sr-only">
+                                                Возрастной рейтинг (MPA)
+                                            </span>
+                                            <select
+                                                id="rating"
+                                                name="rating"
+                                                class="w-full rounded-xl border border-stone-200/80 bg-white/95 px-3.5 py-2 text-sm text-ink outline-none transition focus:border-fuchsia-200/80 focus:ring-2 focus:ring-fuchsia-200/30 dark:border-white/10 dark:bg-slate-950/90 dark:text-white dark:focus:border-fuchsia-300/25 dark:focus:ring-fuchsia-300/10"
+                                            >
+                                                <option value="">Возрастной рейтинг (MPA)</option>
+                                                {% for rating_choice in rating_choices %}
+                                                    <option value="{{ rating_choice }}" {% if rating == rating_choice %}selected{% endif %}>{{ rating_choice }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </label>
+
+                                        <label for="rental_rate" class="space-y-1">
+                                            <span class="sr-only">
+                                                Стоимость аренды
+                                            </span>
+                                            <select
+                                                id="rental_rate"
+                                                name="rental_rate"
+                                                class="w-full rounded-xl border border-stone-200/80 bg-white/95 px-3.5 py-2 text-sm text-ink outline-none transition focus:border-fuchsia-200/80 focus:ring-2 focus:ring-fuchsia-200/30 dark:border-white/10 dark:bg-slate-950/90 dark:text-white dark:focus:border-fuchsia-300/25 dark:focus:ring-fuchsia-300/10"
+                                            >
+                                                <option value="">Стоимость аренды</option>
+                                                {% for rental_rate_value, rental_rate_label in rental_rate_options %}
+                                                    <option value="{{ rental_rate_value }}" {% if rental_rate == rental_rate_value %}selected{% endif %}>{{ rental_rate_label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </label>
+
+                                        <label for="length_group" class="space-y-1">
+                                            <span class="sr-only">
+                                                Длительность
+                                            </span>
+                                            <select
+                                                id="length_group"
+                                                name="length_group"
+                                                class="w-full rounded-xl border border-stone-200/80 bg-white/95 px-3.5 py-2 text-sm text-ink outline-none transition focus:border-fuchsia-200/80 focus:ring-2 focus:ring-fuchsia-200/30 dark:border-white/10 dark:bg-slate-950/90 dark:text-white dark:focus:border-fuchsia-300/25 dark:focus:ring-fuchsia-300/10"
+                                            >
+                                                <option value="">Длительность</option>
+                                                {% for length_group_value, length_group_label in length_group_options %}
+                                                    <option value="{{ length_group_value }}" {% if length_group == length_group_value %}selected{% endif %}>{{ length_group_label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </label>
+
+                                        <label for="year_from" class="space-y-1">
+                                            <span class="sr-only">
+                                                Год от
+                                            </span>
+                                            <select
+                                                id="year_from"
+                                                name="year_from"
+                                                class="w-full rounded-xl border border-stone-200/80 bg-white/95 px-3.5 py-2 text-sm text-ink outline-none transition focus:border-fuchsia-200/80 focus:ring-2 focus:ring-fuchsia-200/30 dark:border-white/10 dark:bg-slate-950/90 dark:text-white dark:focus:border-fuchsia-300/25 dark:focus:ring-fuchsia-300/10"
+                                            >
+                                                <option value="">Год от</option>
+                                                {% for year in years %}
+                                                    <option value="{{ year }}" {% if year_from == year|string %}selected{% endif %}>{{ year }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </label>
+
+                                        <label for="year_to" class="space-y-1">
+                                            <span class="sr-only">
+                                                Год до
+                                            </span>
+                                            <select
+                                                id="year_to"
+                                                name="year_to"
+                                                class="w-full rounded-xl border border-stone-200/80 bg-white/95 px-3.5 py-2 text-sm text-ink outline-none transition focus:border-fuchsia-200/80 focus:ring-2 focus:ring-fuchsia-200/30 dark:border-white/10 dark:bg-slate-950/90 dark:text-white dark:focus:border-fuchsia-300/25 dark:focus:ring-fuchsia-300/10"
+                                            >
+                                                <option value="">Год до</option>
+                                                {% for year in years %}
+                                                    <option value="{{ year }}" {% if year_to == year|string %}selected{% endif %}>{{ year }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </label>
+
+                                        <label for="exact_year" class="space-y-1">
+                                            <span class="sr-only">
+                                                Конкретный год
+                                            </span>
+                                            <select
+                                                id="exact_year"
+                                                name="exact_year"
+                                                class="w-full rounded-xl border border-stone-200/80 bg-white/95 px-3.5 py-2 text-sm text-ink outline-none transition focus:border-fuchsia-200/80 focus:ring-2 focus:ring-fuchsia-200/30 dark:border-white/10 dark:bg-slate-950/90 dark:text-white dark:focus:border-fuchsia-300/25 dark:focus:ring-fuchsia-300/10"
+                                            >
+                                                <option value="">Конкретный год</option>
+                                                {% for year in years %}
+                                                    <option value="{{ year }}" {% if exact_year == year|string %}selected{% endif %}>{{ year }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </label>
+
+                                        <div class="flex items-end lg:col-start-4">
+                                            <button
+                                                type="submit"
+                                                class="inline-flex min-h-[2.75rem] w-full items-center justify-center rounded-xl border border-violet-200/70 bg-gradient-to-r from-white via-violet-50/70 to-rose-50/60 px-4 py-2 text-sm font-semibold text-violet-950 shadow-soft transition hover:-translate-y-0.5 hover:border-violet-300 hover:from-violet-50 hover:via-violet-100/80 hover:to-rose-100/70 hover:shadow-md dark:border-fuchsia-300/20 dark:bg-gradient-to-r dark:from-fuchsia-950/95 dark:via-violet-950/95 dark:to-rose-950/95 dark:text-fuchsia-50 dark:shadow-none dark:hover:from-fuchsia-900 dark:hover:via-violet-900 dark:hover:to-rose-900"
+                                            >
+                                                Найти
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {% if has_active_filters %}
+                                        <div class="mt-3 flex flex-wrap items-center gap-2 border-t border-stone-200/80 pt-3 dark:border-white/10">
+                                            {% if keyword %}
+                                                <a
+                                                    href="{{ url_for('index', actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, rental_rate=rental_rate, length_group=length_group, year_from=year_from, year_to=year_to, sort=sort_mode if sort_mode != 'default' else None, page=1) }}"
+                                                    class="inline-flex items-center gap-2 rounded-full border border-stone-200/80 bg-white/90 px-3 py-1 text-xs text-stone-600 transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-stone-50 dark:border-fuchsia-300/20 dark:bg-fuchsia-950/55 dark:text-fuchsia-100 sm:text-sm"
+                                                >
+                                                    <span>Запрос: {{ keyword }}</span>
+                                                    <span aria-hidden="true" class="text-sm leading-none">&times;</span>
+                                                </a>
+                                            {% endif %}
+
+                                            {% if actor_id and actor_name %}
+                                                <a
+                                                    href="{{ url_for('index', keyword=keyword, genre=genre, exact_year=exact_year, rating=rating, rental_rate=rental_rate, length_group=length_group, year_from=year_from, year_to=year_to, sort=sort_mode if sort_mode != 'default' else None, page=1) }}"
+                                                    class="inline-flex items-center gap-2 rounded-full border border-stone-200/80 bg-white/90 px-3 py-1 text-xs text-stone-600 transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-stone-50 dark:border-fuchsia-300/20 dark:bg-fuchsia-950/55 dark:text-fuchsia-100 sm:text-sm"
+                                                >
+                                                    <span>Актёр: {{ actor_name }}</span>
+                                                    <span aria-hidden="true" class="text-sm leading-none">&times;</span>
+                                                </a>
+                                            {% endif %}
+
+                                            {% if genre %}
+                                                <a
+                                                    href="{{ url_for('index', keyword=keyword, actor_id=actor_id, exact_year=exact_year, rating=rating, rental_rate=rental_rate, length_group=length_group, year_from=year_from, year_to=year_to, sort=sort_mode if sort_mode != 'default' else None, page=1) }}"
+                                                    class="inline-flex items-center gap-2 rounded-full border border-stone-200/80 bg-white/90 px-3 py-1 text-xs text-stone-600 transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-stone-50 dark:border-fuchsia-300/20 dark:bg-fuchsia-950/55 dark:text-fuchsia-100 sm:text-sm"
+                                                >
+                                                    <span>Жанр: {{ genre }}</span>
+                                                    <span aria-hidden="true" class="text-sm leading-none">&times;</span>
+                                                </a>
+                                            {% endif %}
+
+                                            {% if rating %}
+                                                <a
+                                                    href="{{ url_for('index', keyword=keyword, actor_id=actor_id, genre=genre, exact_year=exact_year, rental_rate=rental_rate, length_group=length_group, year_from=year_from, year_to=year_to, sort=sort_mode if sort_mode != 'default' else None, page=1) }}"
+                                                    class="inline-flex items-center gap-2 rounded-full border border-stone-200/80 bg-white/90 px-3 py-1 text-xs text-stone-600 transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-stone-50 dark:border-fuchsia-300/20 dark:bg-fuchsia-950/55 dark:text-fuchsia-100 sm:text-sm"
+                                                >
+                                                    <span>Возрастной рейтинг (MPA): {{ rating }}</span>
+                                                    <span aria-hidden="true" class="text-sm leading-none">&times;</span>
+                                                </a>
+                                            {% endif %}
+
+                                            {% if rental_rate %}
+                                                <a
+                                                    href="{{ url_for('index', keyword=keyword, actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, length_group=length_group, year_from=year_from, year_to=year_to, sort=sort_mode if sort_mode != 'default' else None, page=1) }}"
+                                                    class="inline-flex items-center gap-2 rounded-full border border-stone-200/80 bg-white/90 px-3 py-1 text-xs text-stone-600 transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-stone-50 dark:border-fuchsia-300/20 dark:bg-fuchsia-950/55 dark:text-fuchsia-100 sm:text-sm"
+                                                >
+                                                    <span>Стоимость аренды: ${{ rental_rate }}</span>
+                                                    <span aria-hidden="true" class="text-sm leading-none">&times;</span>
+                                                </a>
+                                            {% endif %}
+
+                                            {% if length_group %}
+                                                <a
+                                                    href="{{ url_for('index', keyword=keyword, actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, rental_rate=rental_rate, year_from=year_from, year_to=year_to, sort=sort_mode if sort_mode != 'default' else None, page=1) }}"
+                                                    class="inline-flex items-center gap-2 rounded-full border border-stone-200/80 bg-white/90 px-3 py-1 text-xs text-stone-600 transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-stone-50 dark:border-fuchsia-300/20 dark:bg-fuchsia-950/55 dark:text-fuchsia-100 sm:text-sm"
+                                                >
+                                                    <span>
+                                                        Длительность:
+                                                        {% for length_group_value, length_group_label in length_group_options %}
+                                                            {% if length_group == length_group_value %}{{ length_group_label }}{% endif %}
+                                                        {% endfor %}
+                                                    </span>
+                                                    <span aria-hidden="true" class="text-sm leading-none">&times;</span>
+                                                </a>
+                                            {% endif %}
+
+                                            {% if year_from %}
+                                                <a
+                                                    href="{{ url_for('index', keyword=keyword, actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, rental_rate=rental_rate, length_group=length_group, year_to=year_to, sort=sort_mode if sort_mode != 'default' else None, page=1) }}"
+                                                    class="inline-flex items-center gap-2 rounded-full border border-stone-200/80 bg-white/90 px-3 py-1 text-xs text-stone-600 transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-stone-50 dark:border-fuchsia-300/20 dark:bg-fuchsia-950/55 dark:text-fuchsia-100 sm:text-sm"
+                                                >
+                                                    <span>Год от: {{ year_from }}</span>
+                                                    <span aria-hidden="true" class="text-sm leading-none">&times;</span>
+                                                </a>
+                                            {% endif %}
+
+                                            {% if year_to %}
+                                                <a
+                                                    href="{{ url_for('index', keyword=keyword, actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, rental_rate=rental_rate, length_group=length_group, year_from=year_from, sort=sort_mode if sort_mode != 'default' else None, page=1) }}"
+                                                    class="inline-flex items-center gap-2 rounded-full border border-stone-200/80 bg-white/90 px-3 py-1 text-xs text-stone-600 transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-stone-50 dark:border-fuchsia-300/20 dark:bg-fuchsia-950/55 dark:text-fuchsia-100 sm:text-sm"
+                                                >
+                                                    <span>Год до: {{ year_to }}</span>
+                                                    <span aria-hidden="true" class="text-sm leading-none">&times;</span>
+                                                </a>
+                                            {% endif %}
+
+                                            {% if exact_year %}
+                                                <a
+                                                    href="{{ url_for('index', keyword=keyword, actor_id=actor_id, genre=genre, rating=rating, rental_rate=rental_rate, length_group=length_group, year_from=year_from, year_to=year_to, sort=sort_mode if sort_mode != 'default' else None, page=1) }}"
+                                                    class="inline-flex items-center gap-2 rounded-full border border-stone-200/80 bg-white/90 px-3 py-1 text-xs text-stone-600 transition hover:-translate-y-0.5 hover:border-stone-300 hover:bg-stone-50 dark:border-fuchsia-300/20 dark:bg-fuchsia-950/55 dark:text-fuchsia-100 sm:text-sm"
+                                                >
+                                                    <span>Конкретный год: {{ exact_year }}</span>
+                                                    <span aria-hidden="true" class="text-sm leading-none">&times;</span>
+                                                </a>
+                                            {% endif %}
+
+                                            <a
+                                                href="{{ url_for('index', sort=sort_mode if sort_mode != 'default' else None, page=1) }}"
+                                                class="inline-flex items-center rounded-full border border-transparent px-3 py-1 text-xs font-semibold text-stone-600 transition hover:-translate-y-0.5 hover:text-purple-800 dark:text-purple-100/70 dark:hover:text-white sm:text-sm"
+                                            >
+                                                Сбросить фильтры
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            {% if has_catalog_query %}
+                <div class="mt-1 rounded-[22px] border border-stone-200/80 bg-white/75 p-3 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-gradient-to-br dark:from-zinc-950 dark:via-slate-950 dark:to-purple-950/95 dark:backdrop-blur-none dark:shadow-2xl dark:shadow-black/20 md:p-4">
+                    <div class="space-y-3">
+                        <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                            <div class="space-y-1">
+                                {% if title != "Каталог фильмов" or is_empty_search_submission %}
+                                    <p class="text-sm text-stone-600 dark:text-purple-100/75">
+                                        {{ message }} · Найдено: {{ total_count }}
+                                    </p>
+                                {% else %}
+                                    <p class="text-sm text-stone-600 dark:text-purple-100/75">
+                                        {{ title }} · Найдено: {{ total_count }}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            <label for="sort" class="block lg:min-w-[10.5rem]">
+                                <span class="sr-only">
+                                    Сортировка
+                                </span>
+                                <select
+                                    id="sort"
+                                    name="sort"
+                                    form="catalog-search-form"
+                                    onchange="this.form.submit()"
+                                    class="min-h-[2.5rem] w-full rounded-[13px] border border-stone-200/80 bg-white/95 px-3 py-1.5 text-sm text-ink outline-none transition focus:border-fuchsia-200/80 focus:ring-2 focus:ring-fuchsia-200/30 dark:border-white/10 dark:bg-slate-900/85 dark:text-white dark:focus:border-fuchsia-300/25 dark:focus:ring-fuchsia-300/10"
+                                >
+                                    <option value="default" {% if sort_mode == "default" %}selected{% endif %}>По умолчанию</option>
+                                    <option value="old" {% if sort_mode == "old" %}selected{% endif %}>По году: сначала старые</option>
+                                    <option value="new" {% if sort_mode == "new" %}selected{% endif %}>По году: сначала новые</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        {% if films %}
+                            <div class="space-y-2">
+                                <div class="grid grid-cols-1 items-center gap-2 lg:grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] lg:gap-2">
+                                    <button
+                                        type="button"
+                                        id="homepage-film-rail-left"
+                                        aria-label="Прокрутить фильмы влево"
+                                        class="hidden h-14 w-9 items-center justify-center self-center rounded-xl border border-purple-200/80 bg-white/90 text-purple-700 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:border-purple-400 hover:bg-purple-50/90 hover:text-purple-800 hover:shadow-md dark:border-white/10 dark:bg-slate-900/90 dark:text-purple-100 dark:hover:border-purple-300/40 dark:hover:bg-slate-800/95 dark:hover:text-white dark:hover:shadow-lg dark:hover:shadow-black/30 lg:inline-flex"
+                                    >
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6l6-6"></path>
+                                        </svg>
+                                    </button>
+
+                                    <div class="min-w-0 overflow-hidden">
+                                        <div id="homepage-film-rail" class="flex gap-3 overflow-x-auto px-1 pb-2 sm:px-0">
+                                        {% for film in films %}
+                                            {% set card_style = film.card_style %}
+                                            {% set poster_panel = film.poster_panel if film.poster_panel is defined else None %}
+                                            {% set hue = card_style.hue %}
+                                            {% set accent_variant = (hue // 45) % 8 %}
+                                            {% set category_label = film.category if film.category is defined and film.category else (film.genre if film.genre is defined and film.genre else None) %}
+                                            <article
+                                                data-card-detail-url="{{ url_for('film_detail', film_id=film.film_id) }}"
+                                                tabindex="0"
+                                                role="link"
+                                                style="--card-hue: {{ hue }};"
+                                                class="homepage-film-card group relative isolate flex min-h-[15rem] min-w-[15rem] max-w-[15rem] flex-shrink-0 cursor-pointer flex-col overflow-hidden rounded-[18px] border border-stone-200/80 bg-white/95 p-3.5 text-ink shadow-soft transition hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus:ring-4 dark:border-slate-800/80 dark:bg-slate-900/90 dark:text-white dark:hover:shadow-2xl dark:hover:shadow-black/30 {% if accent_variant == 0 %}hover:border-sky-200 focus:ring-sky-100/70 dark:focus:ring-sky-300/15{% elif accent_variant == 1 %}hover:border-emerald-200 focus:ring-emerald-100/70 dark:focus:ring-emerald-300/15{% elif accent_variant == 2 %}hover:border-amber-200 focus:ring-amber-100/70 dark:focus:ring-amber-300/15{% elif accent_variant == 3 %}hover:border-rose-200 focus:ring-rose-100/70 dark:focus:ring-rose-300/15{% elif accent_variant == 4 %}hover:border-violet-200 focus:ring-violet-100/70 dark:focus:ring-violet-300/15{% elif accent_variant == 5 %}hover:border-cyan-200 focus:ring-cyan-100/70 dark:focus:ring-cyan-300/15{% elif accent_variant == 6 %}hover:border-fuchsia-200 focus:ring-fuchsia-100/70 dark:focus:ring-fuchsia-300/15{% else %}hover:border-teal-200 focus:ring-teal-100/70 dark:focus:ring-teal-300/15{% endif %} lg:min-w-[calc((100%-2.25rem)/4)] lg:max-w-[calc((100%-2.25rem)/4)]"
+                                            >
+                                                <div
+                                                    aria-hidden="true"
+                                                    class="pointer-events-none absolute inset-0 z-0 rounded-[18px] opacity-80"
+                                                    style="background:
+                                                        radial-gradient(circle at 18% 18%, hsl(var(--card-hue) 92% 78% / 0.14), transparent 34%),
+                                                        radial-gradient(circle at 82% 24%, hsl(var(--card-hue) 90% 68% / 0.09), transparent 28%),
+                                                        linear-gradient(180deg, hsl(var(--card-hue) 82% 96% / 0.18), transparent 42%);
+                                                    "
+                                                ></div>
+                                                <div class="relative z-10 -mx-3.5 -mt-3.5 mb-3 h-1.5" style="background: linear-gradient(90deg, hsl(var(--card-hue) 88% 70% / 0.95), hsl(var(--card-hue) 88% 60% / 0.92));"></div>
+                                                <div class="relative z-10 flex flex-1 flex-col">
+                                                    <div class="relative flex min-h-[5.75rem] overflow-hidden rounded-[16px] border border-white/60 bg-gradient-to-br from-white via-white to-[hsl(var(--card-hue)_95%_97%_/_0.96)] px-3 py-2 shadow-inner dark:border-white/10 dark:from-slate-900/95 dark:via-slate-900/92 dark:to-[hsl(var(--card-hue)_34%_17%_/_0.92)]">
+                                                        <div
+                                                            aria-hidden="true"
+                                                            class="pointer-events-none absolute inset-0 opacity-70"
+                                                            style="background:
+                                                                radial-gradient(circle at 20% 20%, hsl(var(--card-hue) 96% 82% / 0.18), transparent 34%),
+                                                                linear-gradient(140deg, transparent 0%, hsl(var(--card-hue) 82% 72% / 0.08) 100%);
+                                                            "
+                                                        ></div>
+                                                        {% set title_text = film.title %}
+                                                        {% set title_length = title_text|length %}
+                                                        {% set title_stats = namespace(longest_word=0) %}
+                                                        {% for title_word in title_text.split() %}
+                                                            {% if title_word|length > title_stats.longest_word %}
+                                                                {% set title_stats.longest_word = title_word|length %}
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                        <div class="relative flex flex-1 items-start">
+                                                            <div class="relative z-10 w-full max-w-full self-start text-left">
+                                                                <div class="overflow-hidden whitespace-normal hyphens-none [word-break:normal] [overflow-wrap:normal] text-slate-900 dark:text-white {% if title_length <= 12 and title_stats.longest_word <= 8 %}leading-[0.92] tracking-tight text-[1.85rem] sm:text-[2.05rem]{% elif title_length <= 18 and title_stats.longest_word <= 9 %}leading-[0.95] tracking-tight text-[1.5rem] sm:text-[1.7rem]{% elif title_length <= 24 and title_stats.longest_word <= 11 %}leading-tight tracking-tight text-[1.2rem] sm:text-[1.35rem]{% elif title_length <= 32 and title_stats.longest_word <= 13 %}leading-tight tracking-normal text-[1.02rem] sm:text-[1.14rem]{% else %}leading-tight tracking-normal text-[0.9rem] sm:text-[1rem]{% endif %} {% if poster_panel and poster_panel.title_weight == 'black' %}font-black{% elif poster_panel and poster_panel.title_weight == 'bold' %}font-bold{% else %}font-semibold{% endif %}" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                                                                    {{ title_text }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mt-3 min-h-[4.5rem] space-y-1 text-sm font-medium uppercase tracking-[0.06em] text-stone-500 dark:text-slate-300">
+                                                        <div class="flex items-center gap-x-1.5 whitespace-nowrap">
+                                                            <span>ID: {{ film.film_id }}</span>
+                                                            {% if category_label %}
+                                                                <span class="text-stone-300 dark:text-slate-500">•</span>
+                                                                <span class="rounded-full px-1.5 py-0.5 {% if accent_variant == 0 %}bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-100{% elif accent_variant == 1 %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-100{% elif accent_variant == 2 %}bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-100{% elif accent_variant == 3 %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-100{% elif accent_variant == 4 %}bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-100{% elif accent_variant == 5 %}bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-100{% elif accent_variant == 6 %}bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-950/50 dark:text-fuchsia-100{% else %}bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-100{% endif %}">{{ category_label }}</span>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="flex items-center gap-x-1.5 whitespace-nowrap">
+                                                            <span>{{ film.rating if film.rating else "—" }}</span>
+                                                            <span class="text-stone-300 dark:text-slate-500">•</span>
+                                                            <span>{{ film.release_year }}</span>
+                                                        </div>
+                                                        <div class="flex items-center gap-x-1.5 whitespace-nowrap">
+                                                            <span>${{ "%.2f"|format(film.rental_rate) }}</span>
+                                                            <span class="text-stone-300 dark:text-slate-500">•</span>
+                                                            <span class="normal-case tracking-normal">{{ film.length }} мин</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <p class="relative z-10 mt-3 min-h-[3.75rem] overflow-hidden text-xs leading-5 text-stone-600 dark:text-slate-300 sm:text-sm" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                                                        {{ film.description if film.description else "Описание для этого фильма не указано." }}
+                                                    </p>
+
+                                                    <div class="relative z-10 mt-auto flex items-center gap-2 border-t border-purple-100 pt-3 dark:border-white/10">
+                                                        <button
+                                                            type="button"
+                                                            data-quick-view-trigger
+                                                            data-film-id="{{ film.film_id }}"
+                                                            data-detail-url="{{ url_for('film_detail', film_id=film.film_id) }}"
+                                                            class="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full border border-purple-200/80 bg-purple-50/80 px-3 py-1.5 text-xs font-semibold text-purple-800 transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-purple-100 dark:border-purple-300/20 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-950/75"
+                                                        >
+                                                            <span aria-hidden="true">👁</span>
+                                                            <span>Просмотр</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </article>
+                                        {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        id="homepage-film-rail-right"
+                                        aria-label="Прокрутить фильмы вправо"
+                                        class="hidden h-14 w-9 items-center justify-center self-center rounded-xl border border-purple-200/80 bg-white/90 text-purple-700 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:border-purple-400 hover:bg-purple-50/90 hover:text-purple-800 hover:shadow-md dark:border-white/10 dark:bg-slate-900/90 dark:text-purple-100 dark:hover:border-purple-300/40 dark:hover:bg-slate-800/95 dark:hover:text-white dark:hover:shadow-lg dark:hover:shadow-black/30 lg:inline-flex"
+                                    >
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 6l6 6l-6 6"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                            </div>
+
+                            {% if total_pages > 1 %}
+                                {% set page_start = page - 2 if page - 2 > 1 else 1 %}
+                                {% set page_end = page + 2 if page + 2 < total_pages else total_pages %}
+                                <div class="rounded-[20px] border border-purple-200/70 bg-purple-50/70 p-3 dark:border-purple-400/15 dark:bg-slate-900/75">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <nav aria-label="Пагинация каталога" class="flex w-full justify-center">
+                                            <div class="flex flex-wrap items-center justify-center gap-1.5">
+                                                {% if page > 1 %}
+                                                    <a
+                                                        href="{{ url_for('index', keyword=keyword, actor_id=actor_id, rating=rating, page=1, sort=sort_mode) if keyword else url_for('index', actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=1, sort=sort_mode) }}"
+                                                        title="Первая страница"
+                                                        aria-label="Первая страница"
+                                                        class="inline-flex min-w-[2.5rem] items-center justify-center rounded-xl border border-purple-200/80 bg-white/80 px-3 py-2 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-white dark:border-white/10 dark:bg-slate-900/80 dark:text-purple-100 dark:hover:bg-slate-900"
+                                                    >
+                                                        |&lt;
+                                                    </a>
+                                                    <a
+                                                        href="{{ url_for('index', keyword=keyword, actor_id=actor_id, rating=rating, page=page - 1, sort=sort_mode) if keyword else url_for('index', actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=page - 1, sort=sort_mode) }}"
+                                                        title="Предыдущая страница"
+                                                        aria-label="Предыдущая страница"
+                                                        class="inline-flex min-w-[5.5rem] items-center justify-center rounded-xl border border-purple-200/80 bg-white/80 px-3 py-2 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-white dark:border-white/10 dark:bg-slate-900/80 dark:text-purple-100 dark:hover:bg-slate-900"
+                                                    >
+                                                        ‹ Назад
+                                                    </a>
+                                                {% else %}
+                                                    <span
+                                                        aria-disabled="true"
+                                                        class="inline-flex min-w-[2.5rem] cursor-default items-center justify-center rounded-xl border border-purple-200/70 bg-white/45 px-3 py-2 text-sm font-medium text-stone-400 dark:border-white/10 dark:bg-slate-900/40 dark:text-purple-100/35"
+                                                    >
+                                                        |&lt;
+                                                    </span>
+                                                    <span
+                                                        aria-disabled="true"
+                                                        class="inline-flex min-w-[5.5rem] cursor-default items-center justify-center rounded-xl border border-purple-200/70 bg-white/45 px-3 py-2 text-sm font-medium text-stone-400 dark:border-white/10 dark:bg-slate-900/40 dark:text-purple-100/35"
+                                                    >
+                                                        ‹ Назад
+                                                    </span>
+                                                {% endif %}
+
+                                                {% if page_start > 1 %}
+                                                    <a
+                                                        href="{{ url_for('index', keyword=keyword, actor_id=actor_id, rating=rating, page=1, sort=sort_mode) if keyword else url_for('index', actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=1, sort=sort_mode) }}"
+                                                        aria-label="Страница 1"
+                                                        class="inline-flex min-w-[2.5rem] items-center justify-center rounded-xl border border-stone-200/80 bg-white/80 px-3 py-2 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:border-violet-200/70 hover:bg-violet-50/70 hover:text-violet-800 dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:border-violet-300/30 dark:hover:bg-slate-900 dark:hover:text-violet-100"
+                                                    >
+                                                        1
+                                                    </a>
+                                                    {% if page_start > 2 %}
+                                                        <span class="px-1 text-sm font-medium text-stone-500 dark:text-purple-100/55">...</span>
+                                                    {% endif %}
+                                                {% endif %}
+
+                                                {% for page_number in range(page_start, page_end + 1) %}
+                                                    {% if page_number == page %}
+                                                        <span
+                                                            aria-current="page"
+                                                            class="inline-flex min-w-[2.5rem] items-center justify-center rounded-xl border border-fuchsia-200/60 bg-gradient-to-r from-violet-300 via-fuchsia-300 to-rose-300 px-3 py-2 text-sm font-semibold text-violet-950 shadow-soft dark:border-fuchsia-300/20 dark:bg-gradient-to-r dark:from-fuchsia-950/95 dark:via-violet-950/95 dark:to-rose-950/95 dark:text-fuchsia-50 dark:shadow-none"
+                                                        >
+                                                            {{ page_number }}
+                                                        </span>
+                                                    {% else %}
+                                                        <a
+                                                            href="{{ url_for('index', keyword=keyword, actor_id=actor_id, rating=rating, page=page_number, sort=sort_mode) if keyword else url_for('index', actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=page_number, sort=sort_mode) }}"
+                                                            aria-label="Страница {{ page_number }}"
+                                                            class="inline-flex min-w-[2.5rem] items-center justify-center rounded-xl border border-stone-200/80 bg-white/80 px-3 py-2 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:border-violet-200/70 hover:bg-violet-50/70 hover:text-violet-800 dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:border-violet-300/30 dark:hover:bg-slate-900 dark:hover:text-violet-100"
+                                                        >
+                                                            {{ page_number }}
+                                                        </a>
+                                                    {% endif %}
+                                                {% endfor %}
+
+                                                {% if page_end < total_pages %}
+                                                    {% if page_end < total_pages - 1 %}
+                                                        <span class="px-1 text-sm font-medium text-stone-500 dark:text-purple-100/55">...</span>
+                                                    {% endif %}
+                                                    <a
+                                                        href="{{ url_for('index', keyword=keyword, actor_id=actor_id, rating=rating, page=total_pages, sort=sort_mode) if keyword else url_for('index', actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=total_pages, sort=sort_mode) }}"
+                                                        aria-label="Страница {{ total_pages }}"
+                                                        class="inline-flex min-w-[2.5rem] items-center justify-center rounded-xl border border-stone-200/80 bg-white/80 px-3 py-2 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:border-violet-200/70 hover:bg-violet-50/70 hover:text-violet-800 dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:border-violet-300/30 dark:hover:bg-slate-900 dark:hover:text-violet-100"
+                                                    >
+                                                        {{ total_pages }}
+                                                    </a>
+                                                {% endif %}
+
+                                                {% if page < total_pages %}
+                                                    <a
+                                                        href="{{ url_for('index', keyword=keyword, actor_id=actor_id, rating=rating, page=page + 1, sort=sort_mode) if keyword else url_for('index', actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=page + 1, sort=sort_mode) }}"
+                                                        title="Следующая страница"
+                                                        aria-label="Следующая страница"
+                                                        class="inline-flex min-w-[6rem] items-center justify-center rounded-xl border border-stone-200/80 bg-white/80 px-3 py-2 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:border-violet-200/70 hover:bg-violet-50/70 hover:text-violet-800 dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:border-violet-300/30 dark:hover:bg-slate-900 dark:hover:text-violet-100"
+                                                    >
+                                                        Вперёд ›
+                                                    </a>
+                                                    <a
+                                                        href="{{ url_for('index', keyword=keyword, actor_id=actor_id, rating=rating, page=total_pages, sort=sort_mode) if keyword else url_for('index', actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=total_pages, sort=sort_mode) }}"
+                                                        title="Последняя страница"
+                                                        aria-label="Последняя страница"
+                                                        class="inline-flex min-w-[2.5rem] items-center justify-center rounded-xl border border-stone-200/80 bg-white/80 px-3 py-2 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:border-violet-200/70 hover:bg-violet-50/70 hover:text-violet-800 dark:border-white/10 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:border-violet-300/30 dark:hover:bg-slate-900 dark:hover:text-violet-100"
+                                                    >
+                                                        &gt;|
+                                                    </a>
+                                                {% else %}
+                                                    <span
+                                                        aria-disabled="true"
+                                                        class="inline-flex min-w-[6rem] cursor-default items-center justify-center rounded-xl border border-purple-200/70 bg-white/45 px-3 py-2 text-sm font-medium text-stone-400 dark:border-white/10 dark:bg-slate-900/40 dark:text-purple-100/35"
+                                                    >
+                                                        Вперёд ›
+                                                    </span>
+                                                    <span
+                                                        aria-disabled="true"
+                                                        class="inline-flex min-w-[2.5rem] cursor-default items-center justify-center rounded-xl border border-purple-200/70 bg-white/45 px-3 py-2 text-sm font-medium text-stone-400 dark:border-white/10 dark:bg-slate-900/40 dark:text-purple-100/35"
+                                                    >
+                                                        &gt;|
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </nav>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="rounded-[24px] border border-amber-200/80 bg-amber-50/85 p-6 shadow-soft backdrop-blur-xl dark:border-purple-400/15 dark:bg-gradient-to-br dark:from-zinc-950 dark:via-slate-950 dark:to-purple-950/95 dark:backdrop-blur-none dark:shadow-2xl dark:shadow-black/20">
+                                <div class="space-y-4">
+                                    <h3 class="text-2xl font-semibold tracking-tight text-ink dark:text-white">
+                                        Фильмы не найдены
+                                    </h3>
+                                    <p class="max-w-2xl text-sm leading-7 text-stone-600 dark:text-purple-100/75">
+                                        Попробуйте изменить название фильма, выбрать другой жанр или указать другой год поиска.
+                                    </p>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="mt-3 grid gap-3 xl:grid-cols-2">
+                            <section class="rounded-[22px] border border-purple-200/70 bg-white/70 p-3.5 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/60 dark:shadow-none md:p-4">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <h3 class="text-sm font-semibold tracking-tight text-ink dark:text-white md:text-base">
+                                            Последние запросы
+                                        </h3>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        {% if recent_offset > 0 %}
+                                            <a
+                                                href="{{ url_for('index', keyword=keyword, actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=page, sort=sort_mode, recent_offset=recent_first_offset, popular_offset=popular_offset) }}"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200/80 bg-white/85 text-[11px] font-medium text-stone-500 transition hover:border-purple-300 hover:text-purple-700 dark:border-white/10 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:border-purple-300/30 dark:hover:text-purple-200"
+                                                aria-label="В начало последних запросов"
+                                                title="В начало"
+                                            >
+                                                |‹
+                                            </a>
+                                        {% else %}
+                                            <span
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200/50 bg-white/60 text-[11px] font-medium text-stone-300 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-600"
+                                                aria-hidden="true"
+                                            >
+                                                |‹
+                                            </span>
+                                        {% endif %}
+                                        {% if recent_offset > 0 %}
+                                            <a
+                                                href="{{ url_for('index', keyword=keyword, actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=page, sort=sort_mode, recent_offset=recent_prev_offset, popular_offset=popular_offset) }}"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200/80 bg-white/85 text-sm font-medium text-stone-500 transition hover:border-purple-300 hover:text-purple-700 dark:border-white/10 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:border-purple-300/30 dark:hover:text-purple-200"
+                                                aria-label="Показать предыдущие последние запросы"
+                                                title="Показать предыдущие последние запросы"
+                                            >
+                                                ‹
+                                            </a>
+                                        {% else %}
+                                            <span
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200/50 bg-white/60 text-sm font-medium text-stone-300 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-600"
+                                                aria-hidden="true"
+                                            >
+                                                ‹
+                                            </span>
+                                        {% endif %}
+                                        <span class="inline-flex items-center rounded-full border border-stone-200/80 bg-white/90 px-2.5 py-1 text-xs font-medium text-stone-600 dark:border-fuchsia-300/20 dark:bg-slate-900/80 dark:text-fuchsia-100">
+                                            {{ recent_offset + 1 }}–{{ recent_offset + 5 }}
+                                        </span>
+                                        <a
+                                            href="{{ url_for('index', keyword=keyword, actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=page, sort=sort_mode, recent_offset=recent_next_offset, popular_offset=popular_offset) }}"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200/80 bg-white/85 text-sm font-medium text-stone-500 transition hover:border-purple-300 hover:text-purple-700 dark:border-white/10 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:border-purple-300/30 dark:hover:text-purple-200"
+                                            aria-label="Показать следующие последние запросы"
+                                            title="Вперёд"
+                                        >
+                                            ›
+                                        </a>
+                                        {% if recent_offset < recent_last_offset %}
+                                            <a
+                                                href="{{ url_for('index', keyword=keyword, actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=page, sort=sort_mode, recent_offset=recent_last_offset, popular_offset=popular_offset) }}"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200/80 bg-white/85 text-[11px] font-medium text-stone-500 transition hover:border-purple-300 hover:text-purple-700 dark:border-white/10 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:border-purple-300/30 dark:hover:text-purple-200"
+                                                aria-label="В конец последних запросов"
+                                                title="В конец"
+                                            >
+                                                ›|
+                                            </a>
+                                        {% else %}
+                                            <span
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200/50 bg-white/60 text-[11px] font-medium text-stone-300 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-600"
+                                                aria-hidden="true"
+                                            >
+                                                ›|
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div id="recent-searches-content">
+                                {% if recent_searches %}
+                                    <div class="mt-3 space-y-1.5" data-stats-list>
+                                        {% for search in recent_searches %}
+                                            {% set display_title = search.display_title if search.display_title is defined and search.display_title else search.search_text %}
+                                            {% if search.display_subtitle is defined and search.display_subtitle %}
+                                                {% set display_subtitle = search.display_subtitle %}
+                                            {% elif search.search_type == "keyword" %}
+                                                {% set display_subtitle = "по названию" %}
+                                            {% elif search.search_type in ("genre__years_range", "genre_year") %}
+                                                {% set display_subtitle = "фильтры каталога" %}
+                                            {% else %}
+                                                {% set display_subtitle = "поиск" %}
+                                            {% endif %}
+                                            {% set display_time = search.display_time if search.display_time is defined and search.display_time else "" %}
+                                            {% if search.search_type == "keyword" %}
+                                                <a
+                                                    href="{{ url_for('index', keyword=search.search_text, page=1) }}"
+                                                    data-keyword-stat="{{ search.search_text }}"
+                                                    class="group flex items-center justify-between gap-3 rounded-[16px] border border-purple-200/70 bg-white/85 px-3 py-2.5 text-left transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-purple-50/80 dark:border-white/10 dark:bg-slate-950/70 dark:hover:border-purple-300/30 dark:hover:bg-slate-950"
+                                                >
+                                                    <div class="min-w-0 space-y-0.5">
+                                                        <p class="truncate text-sm font-medium leading-5 text-ink dark:text-white">
+                                                            {{ display_title }}
+                                                        </p>
+                                                        <p class="truncate text-[11px] uppercase tracking-[0.16em] text-stone-400 dark:text-slate-500">
+                                                            {{ display_subtitle }}
+                                                        </p>
+                                                        {% if display_time %}
+                                                            <p class="text-[11px] uppercase tracking-[0.16em] text-stone-400 dark:text-slate-500">
+                                                                {{ display_time }}
+                                                            </p>
+                                                        {% endif %}
+                                                    </div>
+                                                    <span class="inline-flex flex-shrink-0 items-center rounded-full border border-stone-200/80 bg-white/90 px-2.5 py-0.5 text-sm font-medium text-stone-500 transition group-hover:border-stone-300 group-hover:text-stone-700 dark:border-fuchsia-300/15 dark:bg-gradient-to-r dark:from-fuchsia-950/85 dark:via-violet-950/85 dark:to-rose-950/85 dark:text-fuchsia-100 dark:group-hover:border-fuchsia-300/25 dark:group-hover:text-fuchsia-50">
+                                                        Найдено: {{ search.results_count if search.results_count is defined else 0 }}
+                                                    </span>
+                                                </a>
+                                            {% elif search.search_type in ("genre__years_range", "genre_year") %}
+                                                <a
+                                                    href="{{ url_for('index', actor_id=search.params.actor_id if search.params is defined and search.params.actor_id is defined else '', genre=search.params.genre if search.params is defined and search.params.genre is defined else '', exact_year=search.params.exact_year if search.params is defined and search.params.exact_year is defined else '', rating=search.params.rating if search.params is defined and search.params.rating is defined else '', rental_rate=search.params.rental_rate if search.params is defined and search.params.rental_rate is defined else '', length_group=search.params.length_group if search.params is defined and search.params.length_group is defined else '', year_from=search.params.year_from if search.params is defined and search.params.year_from is defined else '', year_to=search.params.year_to if search.params is defined and search.params.year_to is defined else '', sort=search.params.sort if search.params is defined and search.params.sort is defined else 'default', page=1) }}"
+                                                    class="group flex items-center justify-between gap-3 rounded-[16px] border border-purple-200/70 bg-white/85 px-3 py-2.5 text-left transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-purple-50/80 dark:border-white/10 dark:bg-slate-950/70 dark:hover:border-purple-300/30 dark:hover:bg-slate-950"
+                                                >
+                                                    <div class="min-w-0 space-y-0.5">
+                                                        <p class="truncate text-sm font-medium leading-5 text-ink dark:text-white">
+                                                            {{ display_title }}
+                                                        </p>
+                                                        <p class="truncate text-[11px] uppercase tracking-[0.16em] text-stone-400 dark:text-slate-500">
+                                                            {{ display_subtitle }}
+                                                        </p>
+                                                        {% if display_time %}
+                                                            <p class="text-[11px] uppercase tracking-[0.16em] text-stone-400 dark:text-slate-500">
+                                                                {{ display_time }}
+                                                            </p>
+                                                        {% endif %}
+                                                    </div>
+                                                    <span class="inline-flex flex-shrink-0 items-center rounded-full border border-stone-200/80 bg-white/90 px-2.5 py-0.5 text-sm font-medium text-stone-500 transition group-hover:border-stone-300 group-hover:text-stone-700 dark:border-fuchsia-300/15 dark:bg-gradient-to-r dark:from-fuchsia-950/85 dark:via-violet-950/85 dark:to-rose-950/85 dark:text-fuchsia-100 dark:group-hover:border-fuchsia-300/25 dark:group-hover:text-fuchsia-50">
+                                                        Найдено: {{ search.results_count if search.results_count is defined else 0 }}
+                                                    </span>
+                                                </a>
+                                            {% else %}
+                                                <div class="flex items-center justify-between gap-3 rounded-[16px] border border-purple-200/70 bg-white/80 px-3 py-2.5 dark:border-white/10 dark:bg-slate-950/60">
+                                                    <div class="min-w-0 space-y-0.5">
+                                                        <p class="truncate text-sm font-medium leading-5 text-ink dark:text-white">
+                                                            {{ display_title }}
+                                                        </p>
+                                                        <p class="truncate text-[11px] uppercase tracking-[0.16em] text-stone-400 dark:text-slate-500">
+                                                            {{ display_subtitle }}
+                                                        </p>
+                                                        {% if display_time %}
+                                                            <p class="text-[11px] uppercase tracking-[0.16em] text-stone-400 dark:text-slate-500">
+                                                                {{ display_time }}
+                                                            </p>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="mt-3 rounded-[16px] border border-dashed border-purple-200/80 bg-white/60 px-3 py-4 text-sm text-stone-500 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-400">
+                                        Пока нет сохранённых запросов.
+                                    </div>
+                                {% endif %}
+                                </div>
+                            </section>
+
+                            <section class="rounded-[22px] border border-purple-200/70 bg-white/70 p-3.5 shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/60 dark:shadow-none md:p-4">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <h3 class="text-sm font-semibold tracking-tight text-ink dark:text-white md:text-base">
+                                            Популярные запросы
+                                        </h3>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        {% if popular_offset > 0 %}
+                                            <a
+                                                href="{{ url_for('index', keyword=keyword, actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=page, sort=sort_mode, recent_offset=recent_offset, popular_offset=popular_first_offset) }}"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200/80 bg-white/85 text-[11px] font-medium text-stone-500 transition hover:border-fuchsia-300 hover:text-fuchsia-700 dark:border-white/10 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:border-fuchsia-300/30 dark:hover:text-fuchsia-200"
+                                                aria-label="В начало популярных запросов"
+                                                title="В начало"
+                                            >
+                                                |‹
+                                            </a>
+                                        {% else %}
+                                            <span
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200/50 bg-white/60 text-[11px] font-medium text-stone-300 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-600"
+                                                aria-hidden="true"
+                                            >
+                                                |‹
+                                            </span>
+                                        {% endif %}
+                                        {% if popular_offset > 0 %}
+                                            <a
+                                                href="{{ url_for('index', keyword=keyword, actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=page, sort=sort_mode, recent_offset=recent_offset, popular_offset=popular_prev_offset) }}"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200/80 bg-white/85 text-sm font-medium text-stone-500 transition hover:border-fuchsia-300 hover:text-fuchsia-700 dark:border-white/10 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:border-fuchsia-300/30 dark:hover:text-fuchsia-200"
+                                                aria-label="Показать предыдущие популярные запросы"
+                                                title="Показать предыдущие популярные запросы"
+                                            >
+                                                ‹
+                                            </a>
+                                        {% else %}
+                                            <span
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200/50 bg-white/60 text-sm font-medium text-stone-300 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-600"
+                                                aria-hidden="true"
+                                            >
+                                                ‹
+                                            </span>
+                                        {% endif %}
+                                        <span class="inline-flex items-center rounded-full border border-stone-200/80 bg-white/90 px-2.5 py-1 text-xs font-medium text-stone-600 dark:border-fuchsia-300/20 dark:bg-slate-900/80 dark:text-fuchsia-100">
+                                            {{ popular_offset + 1 }}–{{ popular_offset + 5 }}
+                                        </span>
+                                        <a
+                                            href="{{ url_for('index', keyword=keyword, actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=page, sort=sort_mode, recent_offset=recent_offset, popular_offset=popular_next_offset) }}"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200/80 bg-white/85 text-sm font-medium text-stone-500 transition hover:border-fuchsia-300 hover:text-fuchsia-700 dark:border-white/10 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:border-fuchsia-300/30 dark:hover:text-fuchsia-200"
+                                            aria-label="Показать следующие популярные запросы"
+                                            title="Вперёд"
+                                        >
+                                            ›
+                                        </a>
+                                        {% if popular_offset < popular_last_offset %}
+                                            <a
+                                                href="{{ url_for('index', keyword=keyword, actor_id=actor_id, genre=genre, exact_year=exact_year, rating=rating, year_from=year_from, year_to=year_to, page=page, sort=sort_mode, recent_offset=recent_offset, popular_offset=popular_last_offset) }}"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200/80 bg-white/85 text-[11px] font-medium text-stone-500 transition hover:border-fuchsia-300 hover:text-fuchsia-700 dark:border-white/10 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:border-fuchsia-300/30 dark:hover:text-fuchsia-200"
+                                                aria-label="В конец популярных запросов"
+                                                title="В конец"
+                                            >
+                                                ›|
+                                            </a>
+                                        {% else %}
+                                            <span
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200/50 bg-white/60 text-[11px] font-medium text-stone-300 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-600"
+                                                aria-hidden="true"
+                                            >
+                                                ›|
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div id="popular-searches-content">
+                                {% if popular_searches %}
+                                    <div class="mt-3 space-y-1.5" data-stats-list>
+                                        {% for search in popular_searches %}
+                                            {% set display_title = search.display_title if search.display_title is defined and search.display_title else search.search_text %}
+                                            {% if search.display_subtitle is defined and search.display_subtitle %}
+                                                {% set display_subtitle = search.display_subtitle %}
+                                            {% elif search.search_type == "keyword" %}
+                                                {% set display_subtitle = "по названию" %}
+                                            {% elif search.search_type in ("genre__years_range", "genre_year") %}
+                                                {% set display_subtitle = "фильтры каталога" %}
+                                            {% else %}
+                                                {% set display_subtitle = "поиск" %}
+                                            {% endif %}
+                                            {% set display_time = search.display_time if search.display_time is defined and search.display_time else "" %}
+                                            {% if search.search_type == "keyword" %}
+                                                <a
+                                                    href="{{ url_for('index', keyword=search.search_text, page=1) }}"
+                                                    data-keyword-stat="{{ search.search_text }}"
+                                                    class="group flex items-center justify-between gap-3 rounded-[16px] border border-fuchsia-200/70 bg-white/85 px-3 py-2.5 text-left transition hover:-translate-y-0.5 hover:border-fuchsia-300 hover:bg-fuchsia-50/70 dark:border-white/10 dark:bg-slate-950/70 dark:hover:border-fuchsia-300/30 dark:hover:bg-slate-950"
+                                                >
+                                                    <div class="min-w-0 space-y-0.5">
+                                                        <p class="truncate text-sm font-medium leading-5 text-ink dark:text-white">
+                                                            {{ display_title }}
+                                                        </p>
+                                                        <p class="truncate text-[11px] uppercase tracking-[0.16em] text-stone-400 dark:text-slate-500">
+                                                            {{ display_subtitle }}
+                                                        </p>
+                                                        {% if display_time %}
+                                                            <p class="text-[11px] uppercase tracking-[0.16em] text-stone-400 dark:text-slate-500">
+                                                                {{ display_time }}
+                                                            </p>
+                                                        {% endif %}
+                                                    </div>
+                                                    <span data-popular-count class="inline-flex flex-shrink-0 items-center rounded-full border border-stone-200/80 bg-white/90 px-2.5 py-1 text-sm font-medium text-stone-600 transition group-hover:border-stone-300 group-hover:bg-stone-50 dark:border-fuchsia-300/20 dark:bg-gradient-to-r dark:from-fuchsia-950/95 dark:via-violet-950/95 dark:to-rose-950/95 dark:text-fuchsia-50 dark:shadow-none dark:group-hover:from-fuchsia-900 dark:group-hover:via-violet-900 dark:group-hover:to-rose-900">
+                                                        {{ search.count }} раз · найдено: {{ search.results_count if search.results_count is defined else 0 }}
+                                                    </span>
+                                                </a>
+                                            {% elif search.search_type in ("genre__years_range", "genre_year") %}
+                                                <a
+                                                    href="{{ url_for('index', actor_id=search.params.actor_id if search.params is defined and search.params.actor_id is defined else '', genre=search.params.genre if search.params is defined and search.params.genre is defined else '', exact_year=search.params.exact_year if search.params is defined and search.params.exact_year is defined else '', rating=search.params.rating if search.params is defined and search.params.rating is defined else '', rental_rate=search.params.rental_rate if search.params is defined and search.params.rental_rate is defined else '', length_group=search.params.length_group if search.params is defined and search.params.length_group is defined else '', year_from=search.params.year_from if search.params is defined and search.params.year_from is defined else '', year_to=search.params.year_to if search.params is defined and search.params.year_to is defined else '', sort=search.params.sort if search.params is defined and search.params.sort is defined else 'default', page=1) }}"
+                                                    class="group flex items-center justify-between gap-3 rounded-[16px] border border-fuchsia-200/70 bg-white/85 px-3 py-2.5 text-left transition hover:-translate-y-0.5 hover:border-fuchsia-300 hover:bg-fuchsia-50/70 dark:border-white/10 dark:bg-slate-950/70 dark:hover:border-fuchsia-300/30 dark:hover:bg-slate-950"
+                                                >
+                                                    <div class="min-w-0 space-y-0.5">
+                                                        <p class="truncate text-sm font-medium leading-5 text-ink dark:text-white">
+                                                            {{ display_title }}
+                                                        </p>
+                                                        <p class="truncate text-[11px] uppercase tracking-[0.16em] text-stone-400 dark:text-slate-500">
+                                                            {{ display_subtitle }}
+                                                        </p>
+                                                        {% if display_time %}
+                                                            <p class="text-[11px] uppercase tracking-[0.16em] text-stone-400 dark:text-slate-500">
+                                                                {{ display_time }}
+                                                            </p>
+                                                        {% endif %}
+                                                    </div>
+                                                    <span class="inline-flex flex-shrink-0 items-center rounded-full border border-stone-200/80 bg-white/90 px-2.5 py-1 text-sm font-medium text-stone-600 transition group-hover:border-stone-300 group-hover:bg-stone-50 dark:border-fuchsia-300/20 dark:bg-gradient-to-r dark:from-fuchsia-950/95 dark:via-violet-950/95 dark:to-rose-950/95 dark:text-fuchsia-50 dark:shadow-none dark:group-hover:from-fuchsia-900 dark:group-hover:via-violet-900 dark:group-hover:to-rose-900">
+                                                        {{ search.count }} раз · найдено: {{ search.results_count if search.results_count is defined else 0 }}
+                                                    </span>
+                                                </a>
+                                            {% else %}
+                                                <div class="flex items-center justify-between gap-3 rounded-[16px] border border-purple-200/70 bg-white/80 px-3 py-2.5 dark:border-white/10 dark:bg-slate-950/60">
+                                                    <div class="min-w-0 space-y-0.5">
+                                                        <p class="truncate text-sm font-medium leading-5 text-ink dark:text-white">
+                                                            {{ display_title }}
+                                                        </p>
+                                                        <p class="truncate text-[11px] uppercase tracking-[0.16em] text-stone-400 dark:text-slate-500">
+                                                            {{ display_subtitle }}
+                                                        </p>
+                                                    </div>
+                                                    <span class="inline-flex flex-shrink-0 items-center rounded-full border border-stone-200/80 bg-white/90 px-2.5 py-1 text-sm font-medium text-stone-600 dark:border-fuchsia-300/20 dark:bg-gradient-to-r dark:from-fuchsia-950/95 dark:via-violet-950/95 dark:to-rose-950/95 dark:text-fuchsia-50 dark:shadow-none">
+                                                        {{ search.count }} раз
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="mt-3 rounded-[16px] border border-dashed border-purple-200/80 bg-white/60 px-3 py-4 text-sm text-stone-500 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-400">
+                                        Пока нет популярных запросов.
+                                    </div>
+                                {% endif %}
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+<div
+    id="film-quick-view-modal"
+    class="fixed inset-0 z-50 hidden"
+    aria-hidden="true"
+>
+    <div
+        id="film-quick-view-backdrop"
+        class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+    ></div>
+    <div class="relative z-10 flex min-h-screen items-center justify-center px-4 py-8">
+        <div class="w-full max-w-4xl overflow-hidden rounded-[28px] border border-purple-200/70 bg-white/95 shadow-2xl dark:border-white/10 dark:bg-gradient-to-br dark:from-zinc-950 dark:via-slate-950 dark:to-purple-950/95">
+            <div class="flex items-start justify-between gap-4 border-b border-purple-100 px-5 py-4 dark:border-white/10 md:px-6">
+                <div class="min-w-0 space-y-2">
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-purple-700 dark:text-purple-100/80">
+                        Быстрый просмотр
+                    </p>
+                    <h2
+                        id="film-quick-view-title"
+                        class="truncate text-2xl font-semibold tracking-tight text-ink dark:text-white md:text-3xl"
+                    >
+                        Загрузка...
+                    </h2>
+                </div>
+                <button
+                    type="button"
+                    id="film-quick-view-close"
+                    class="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-stone-200/80 bg-white/90 text-stone-500 transition hover:-translate-y-0.5 hover:border-purple-300 hover:text-purple-700 dark:border-white/10 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:text-white"
+                    aria-label="Закрыть быстрый просмотр"
+                >
+                    <span aria-hidden="true" class="text-lg leading-none">&times;</span>
+                </button>
+            </div>
+
+            <div class="max-h-[calc(100vh-8rem)] overflow-y-auto px-5 py-5 md:px-6">
+                <div
+                    id="film-quick-view-status"
+                    class="rounded-[20px] border border-purple-200/80 bg-purple-50/70 px-4 py-4 text-sm text-stone-600 dark:border-white/10 dark:bg-slate-900/75 dark:text-purple-100/75"
+                >
+                    Загружаем данные фильма...
+                </div>
+
+                <div id="film-quick-view-content" class="hidden space-y-6">
+                    <div class="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.95fr)]">
+                        <div class="space-y-6">
+                            <section class="rounded-[24px] border border-purple-200/70 bg-white/80 p-5 shadow-soft dark:border-white/10 dark:bg-slate-900/75">
+                                <h3 class="text-lg font-semibold tracking-tight text-ink dark:text-white">
+                                    Описание
+                                </h3>
+                                <p id="film-quick-view-description" class="mt-3 text-sm leading-7 text-stone-600 dark:text-purple-100/75"></p>
+                            </section>
+
+                            <section class="rounded-[24px] border border-purple-200/70 bg-white/80 p-5 shadow-soft dark:border-white/10 dark:bg-slate-900/75">
+                                <h3 class="text-lg font-semibold tracking-tight text-ink dark:text-white">
+                                    Актёры
+                                </h3>
+                                <div id="film-quick-view-actors" class="mt-3 flex flex-wrap gap-2"></div>
+                            </section>
+                        </div>
+
+                        <div class="space-y-6">
+                            <section class="rounded-[24px] border border-purple-200/70 bg-white/80 p-5 shadow-soft dark:border-white/10 dark:bg-slate-900/75">
+                                <h3 class="text-lg font-semibold tracking-tight text-ink dark:text-white">
+                                    Детали
+                                </h3>
+                                <dl id="film-quick-view-details" class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1"></dl>
+                            </section>
+
+                            <section class="rounded-[24px] border border-purple-200/70 bg-white/80 p-4 shadow-soft dark:border-white/10 dark:bg-slate-900/75">
+                                <h3 class="text-base font-semibold tracking-tight text-ink dark:text-white">
+                                    Жанры и особенности
+                                </h3>
+
+                                <div class="mt-3 space-y-3">
+                                    <div>
+                                        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500 dark:text-purple-100/60">Жанры</p>
+                                        <div id="film-quick-view-categories" class="mt-2 flex flex-wrap gap-1.5"></div>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500 dark:text-purple-100/60">Особенности</p>
+                                        <div id="film-quick-view-features" class="mt-2 flex flex-wrap gap-1.5"></div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-end gap-3 border-t border-purple-100 pt-4 dark:border-white/10">
+                        <a
+                            id="film-quick-view-detail-link"
+                            href="#"
+                            class="inline-flex items-center justify-center rounded-full border border-purple-200/80 bg-purple-50/80 px-4 py-2 text-sm font-semibold text-purple-800 transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-purple-100 dark:border-purple-300/20 dark:bg-purple-950/55 dark:text-purple-100 dark:hover:bg-purple-950/80"
+                        >
+                            Подробнее
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    (() => {
+        const keywordInput = document.getElementById("keyword");
+        const keywordFieldShell = document.getElementById("keyword-field-shell");
+        const filtersToggleCompact = document.getElementById("filters-toggle-compact");
+        const filtersToggleCompactIcon = document.getElementById("filters-toggle-compact-icon");
+        const filtersPanel = document.getElementById("advanced-filters-panel");
+
+        if (keywordInput && keywordFieldShell && filtersPanel) {
+            const openFilters = () => {
+                if (filtersPanel.classList.contains("hidden")) {
+                    filtersPanel.classList.remove("hidden");
+                    updateToggleState();
+                }
+            };
+
+            const toggleFilters = () => {
+                filtersPanel.classList.toggle("hidden");
+                updateToggleState();
+            };
+
+            const updateToggleState = () => {
+                if (!filtersToggleCompact || !filtersToggleCompactIcon) {
+                    return;
+                }
+
+                const isExpanded = !filtersPanel.classList.contains("hidden");
+                const toggleLabel = isExpanded ? "Скрыть фильтры" : "Показать фильтры";
+
+                filtersToggleCompact.setAttribute("aria-expanded", String(isExpanded));
+                filtersToggleCompact.setAttribute("aria-label", toggleLabel);
+                filtersToggleCompact.setAttribute("title", toggleLabel);
+                filtersToggleCompactIcon.classList.toggle("rotate-180", isExpanded);
+            };
+
+            keywordInput.addEventListener("focus", openFilters);
+            keywordInput.addEventListener("click", openFilters);
+            keywordFieldShell.addEventListener("click", openFilters);
+
+            if (filtersToggleCompact) {
+                filtersToggleCompact.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleFilters();
+                });
+            }
+
+            updateToggleState();
+        }
+    })();
+</script>
+<script>
+    (() => {
+        const rail = document.getElementById("homepage-film-rail");
+        const leftButton = document.getElementById("homepage-film-rail-left");
+        const rightButton = document.getElementById("homepage-film-rail-right");
+
+        if (!rail || !leftButton || !rightButton) {
+            return;
+        }
+
+        const getScrollAmount = () => {
+            const firstCard = rail.querySelector(".homepage-film-card");
+            if (!firstCard) {
+                return 280;
+            }
+
+            const railStyles = window.getComputedStyle(rail);
+            const gap = Number.parseFloat(railStyles.columnGap || railStyles.gap || "0");
+            return firstCard.getBoundingClientRect().width + gap;
+        };
+
+        leftButton.addEventListener("click", () => {
+            rail.scrollBy({ left: -getScrollAmount(), behavior: "smooth" });
+        });
+
+        rightButton.addEventListener("click", () => {
+            rail.scrollBy({ left: getScrollAmount(), behavior: "smooth" });
+        });
+    })();
+</script>
+<script>
+    (() => {
+        const modal = document.getElementById("film-quick-view-modal");
+        const backdrop = document.getElementById("film-quick-view-backdrop");
+        const closeButton = document.getElementById("film-quick-view-close");
+        const statusBlock = document.getElementById("film-quick-view-status");
+        const contentBlock = document.getElementById("film-quick-view-content");
+        const titleNode = document.getElementById("film-quick-view-title");
+        const descriptionNode = document.getElementById("film-quick-view-description");
+        const actorsNode = document.getElementById("film-quick-view-actors");
+        const detailsNode = document.getElementById("film-quick-view-details");
+        const categoriesNode = document.getElementById("film-quick-view-categories");
+        const featuresNode = document.getElementById("film-quick-view-features");
+        const detailLink = document.getElementById("film-quick-view-detail-link");
+        const detailCards = document.querySelectorAll("[data-card-detail-url]");
+        const quickViewButtons = document.querySelectorAll("[data-quick-view-trigger]");
+
+        if (
+            !modal ||
+            !backdrop ||
+            !closeButton ||
+            !statusBlock ||
+            !contentBlock ||
+            !titleNode ||
+            !descriptionNode ||
+            !actorsNode ||
+            !detailsNode ||
+            !categoriesNode ||
+            !featuresNode ||
+            !detailLink ||
+            !quickViewButtons.length
+        ) {
+            return;
+        }
+
+        let activeRequestId = 0;
+        let previousBodyOverflow = "";
+
+        const emptyText = "Не указано";
+
+        const resetList = (container) => {
+            container.replaceChildren();
+        };
+
+        const createBadge = (text, variant = "default") => {
+            const badge = document.createElement("span");
+            badge.className =
+                "inline-flex items-center rounded-full border px-3 py-1 text-sm " +
+                (
+                    variant === "violet"
+                        ? "border-violet-200/80 bg-violet-100/80 text-violet-800 dark:border-violet-300/20 dark:bg-violet-950/50 dark:text-violet-100"
+                        : variant === "fuchsia"
+                            ? "border-fuchsia-200/80 bg-fuchsia-100/80 text-fuchsia-800 dark:border-fuchsia-300/20 dark:bg-fuchsia-950/50 dark:text-fuchsia-100"
+                            : "border-purple-200/80 bg-purple-50 text-purple-800 dark:border-purple-300/20 dark:bg-purple-950/60 dark:text-purple-100"
+                );
+            badge.textContent = text;
+            return badge;
+        };
+
+        const renderList = (container, items, emptyMessage, variant = "default") => {
+            resetList(container);
+
+            if (!Array.isArray(items) || !items.length) {
+                const emptyNode = document.createElement("p");
+                emptyNode.className = "text-sm text-stone-600 dark:text-purple-100/75";
+                emptyNode.textContent = emptyMessage;
+                container.appendChild(emptyNode);
+                return;
+            }
+
+            items.forEach((item) => {
+                if (!item) {
+                    return;
+                }
+                container.appendChild(createBadge(String(item), variant));
+            });
+        };
+
+        const createDetailRow = (label, value) => {
+            const wrapper = document.createElement("div");
+            wrapper.className = "rounded-2xl border border-purple-100 bg-purple-50/70 px-4 py-3 dark:border-white/10 dark:bg-slate-900/75";
+
+            const term = document.createElement("dt");
+            term.className = "text-xs uppercase tracking-[0.18em] text-stone-500 dark:text-purple-100/55";
+            term.textContent = label;
+
+            const description = document.createElement("dd");
+            description.className = "mt-2 text-lg font-semibold text-ink dark:text-white";
+            description.textContent = value;
+
+            wrapper.append(term, description);
+            return wrapper;
+        };
+
+        const resetModalBody = () => {
+            titleNode.textContent = "Загрузка...";
+            descriptionNode.textContent = "";
+            resetList(actorsNode);
+            resetList(detailsNode);
+            resetList(categoriesNode);
+            resetList(featuresNode);
+            detailLink.href = "#";
+        };
+
+        const showStatus = (message) => {
+            statusBlock.textContent = message;
+            statusBlock.classList.remove("hidden");
+            contentBlock.classList.add("hidden");
+        };
+
+        const showContent = () => {
+            statusBlock.classList.add("hidden");
+            contentBlock.classList.remove("hidden");
+        };
+
+        const openModal = () => {
+            previousBodyOverflow = document.body.style.overflow;
+            document.body.style.overflow = "hidden";
+            modal.classList.remove("hidden");
+            modal.setAttribute("aria-hidden", "false");
+        };
+
+        const openDetailPage = (detailUrl) => {
+            if (!detailUrl) {
+                return;
+            }
+
+            window.location.href = detailUrl;
+        };
+
+        const closeModal = () => {
+            modal.classList.add("hidden");
+            modal.setAttribute("aria-hidden", "true");
+            document.body.style.overflow = previousBodyOverflow;
+        };
+
+        const buildDetails = (film) => {
+            resetList(detailsNode);
+
+            const detailRows = [
+                ["ID", film.film_id],
+                ["Год выпуска", film.release_year],
+                ["Рейтинг", film.rating],
+                ["Длительность", film.length ? `${film.length} мин.` : ""],
+                ["Срок аренды", film.rental_duration ? `${film.rental_duration} дн.` : ""],
+                ["Стоимость аренды", film.rental_rate !== null && film.rental_rate !== undefined ? `$${film.rental_rate}` : ""],
+                ["Стоимость замены", film.replacement_cost !== null && film.replacement_cost !== undefined ? `$${film.replacement_cost}` : ""],
+                ["Язык", film.language],
+            ];
+
+            detailRows.forEach(([label, value]) => {
+                const normalizedValue = value === null || value === undefined || value === "" ? emptyText : String(value);
+                detailsNode.appendChild(createDetailRow(label, normalizedValue));
+            });
+        };
+
+        const renderFilm = (film, detailUrl) => {
+            titleNode.textContent = film.title || "Без названия";
+            descriptionNode.textContent = film.description || "Описание для этого фильма не указано.";
+            detailLink.href = detailUrl;
+
+            buildDetails(film);
+            renderList(
+                actorsNode,
+                Array.isArray(film.actors) ? film.actors : [],
+                "Актёры для этого фильма не указаны."
+            );
+            renderList(
+                categoriesNode,
+                Array.isArray(film.categories) ? film.categories : [],
+                "Жанры для этого фильма не указаны.",
+                "violet"
+            );
+            renderList(
+                featuresNode,
+                Array.isArray(film.special_features) ? film.special_features : [],
+                "Специальные возможности для этого фильма не указаны.",
+                "fuchsia"
+            );
+
+            showContent();
+        };
+
+        const loadFilm = async (filmId, detailUrl) => {
+            activeRequestId += 1;
+            const requestId = activeRequestId;
+
+            resetModalBody();
+            showStatus("Загружаем данные фильма...");
+            openModal();
+
+            try {
+                const response = await fetch(`/api/films/${filmId}`);
+
+                if (!response.ok) {
+                    throw new Error("Не удалось загрузить данные фильма.");
+                }
+
+                const film = await response.json();
+
+                if (requestId !== activeRequestId) {
+                    return;
+                }
+
+                renderFilm(film, detailUrl);
+            } catch (error) {
+                if (requestId !== activeRequestId) {
+                    return;
+                }
+
+                showStatus("Не удалось загрузить быстрый просмотр. Попробуйте открыть полную страницу фильма.");
+                detailLink.href = detailUrl;
+            }
+        };
+
+        detailCards.forEach((card) => {
+            card.addEventListener("click", (event) => {
+                if (event.target.closest("[data-quick-view-trigger]")) {
+                    return;
+                }
+
+                openDetailPage(card.dataset.cardDetailUrl);
+            });
+
+            card.addEventListener("keydown", (event) => {
+                if (event.target.closest("[data-quick-view-trigger]")) {
+                    return;
+                }
+
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openDetailPage(card.dataset.cardDetailUrl);
+                }
+            });
+        });
+
+        quickViewButtons.forEach((button) => {
+            button.addEventListener("click", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const filmId = button.dataset.filmId;
+                const detailUrl = button.dataset.detailUrl || "#";
+
+                if (!filmId) {
+                    showStatus("Не удалось определить фильм для быстрого просмотра.");
+                    openModal();
+                    return;
+                }
+
+                loadFilm(filmId, detailUrl);
+            });
+        });
+
+        closeButton.addEventListener("click", closeModal);
+        backdrop.addEventListener("click", closeModal);
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && !modal.classList.contains("hidden")) {
+                closeModal();
+            }
+        });
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    command: ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "5001:8000"
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      MYSQL_HOST: ${MYSQL_HOST:-your_mysql_host}
+      MYSQL_PORT: ${MYSQL_PORT:-3306}
+      MYSQL_USER: ${MYSQL_USER:-your_mysql_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-your_mysql_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-sakila}
+      MONGODB_URL: mongodb://mongo:27017/film_search
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo_data_v7:/data/db
+
+volumes:
+  mongo_data_v7:

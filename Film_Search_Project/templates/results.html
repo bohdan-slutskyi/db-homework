@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Результаты | Film Search Project{% endblock %}
+
+{% block content %}
+<section class="space-y-6">
+    <div class="rounded-[28px] border border-purple-200/70 bg-white/75 p-6 shadow-soft backdrop-blur-xl dark:border-purple-400/15 dark:bg-gradient-to-br dark:from-zinc-950 dark:via-slate-950 dark:to-purple-950/95 dark:backdrop-blur-none dark:shadow-2xl dark:shadow-black/20 md:p-8">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div class="max-w-3xl space-y-3">
+                <span class="inline-flex w-fit items-center rounded-full border border-purple-200/80 bg-purple-100/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-purple-700 dark:border-purple-300/20 dark:bg-purple-300/10 dark:text-purple-100">
+                    Результаты поиска
+                </span>
+                <h1 class="text-3xl font-semibold tracking-tight text-ink dark:text-white md:text-4xl">
+                    {{ title }}
+                </h1>
+                <p class="max-w-2xl text-sm leading-7 text-stone-600 dark:text-purple-100/75 md:text-base">
+                    {{ message }}
+                </p>
+            </div>
+
+            <a
+                href="{{ url_for('index') }}"
+                class="inline-flex items-center justify-center rounded-full border border-purple-200/80 bg-white/80 px-5 py-3 text-sm font-semibold text-stone-700 transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-purple-50 dark:border-white/10 dark:bg-slate-900/80 dark:text-purple-100 dark:hover:bg-slate-900"
+            >
+                Вернуться на главную
+            </a>
+        </div>
+    </div>
+
+    {% if films is defined %}
+        {% if films %}
+            <div class="rounded-[28px] border border-purple-200/70 bg-white/70 p-6 shadow-soft backdrop-blur-xl dark:border-purple-400/15 dark:bg-gradient-to-br dark:from-zinc-950 dark:via-slate-950 dark:to-purple-950/95 dark:backdrop-blur-none dark:shadow-2xl dark:shadow-black/20 md:p-8">
+                <div class="flex flex-col gap-5 border-b border-purple-100 pb-6 dark:border-white/10">
+                    <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                        <div class="space-y-2">
+                            <h2 class="text-2xl font-semibold tracking-tight text-ink dark:text-white">
+                                Результаты
+                            </h2>
+                            <p class="text-sm text-stone-600 dark:text-purple-100/70">
+                                Найдено: {{ films|length }}
+                            </p>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            {% if keyword is defined %}
+                                <a
+                                    href="{{ url_for('search_keyword', keyword=keyword, page=1, sort='default') }}"
+                                    class="inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition {% if sort_mode == 'default' %}border-purple-600 bg-purple-600 text-white shadow-soft dark:border-purple-300 dark:bg-gradient-to-r dark:from-purple-400 dark:via-violet-400 dark:to-fuchsia-400 dark:text-slate-950{% else %}border-purple-200/80 bg-white/80 text-stone-700 hover:-translate-y-0.5 hover:border-purple-300 hover:bg-purple-50 dark:border-white/10 dark:bg-slate-900/75 dark:text-purple-100 dark:hover:bg-slate-900{% endif %}"
+                                >
+                                    По умолчанию
+                                </a>
+                                <a
+                                    href="{{ url_for('search_keyword', keyword=keyword, page=1, sort='old') }}"
+                                    class="inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition {% if sort_mode == 'old' %}border-purple-600 bg-purple-600 text-white shadow-soft dark:border-purple-300 dark:bg-gradient-to-r dark:from-purple-400 dark:via-violet-400 dark:to-fuchsia-400 dark:text-slate-950{% else %}border-purple-200/80 bg-white/80 text-stone-700 hover:-translate-y-0.5 hover:border-purple-300 hover:bg-purple-50 dark:border-white/10 dark:bg-slate-900/75 dark:text-purple-100 dark:hover:bg-slate-900{% endif %}"
+                                >
+                                    Сначала старые
+                                </a>
+                                <a
+                                    href="{{ url_for('search_keyword', keyword=keyword, page=1, sort='new') }}"
+                                    class="inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition {% if sort_mode == 'new' %}border-purple-600 bg-purple-600 text-white shadow-soft dark:border-purple-300 dark:bg-gradient-to-r dark:from-purple-400 dark:via-violet-400 dark:to-fuchsia-400 dark:text-slate-950{% else %}border-purple-200/80 bg-white/80 text-stone-700 hover:-translate-y-0.5 hover:border-purple-300 hover:bg-purple-50 dark:border-white/10 dark:bg-slate-900/75 dark:text-purple-100 dark:hover:bg-slate-900{% endif %}"
+                                >
+                                    Сначала новые
+                                </a>
+                            {% endif %}
+
+                            {% if genre is defined and year_from is defined and year_to is defined %}
+                                <a
+                                    href="{{ url_for('search_genre', genre=genre, exact_year=exact_year, year_from=year_from, year_to=year_to, page=1, sort='default') }}"
+                                    class="inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition {% if sort_mode == 'default' %}border-purple-600 bg-purple-600 text-white shadow-soft dark:border-purple-300 dark:bg-gradient-to-r dark:from-purple-400 dark:via-violet-400 dark:to-fuchsia-400 dark:text-slate-950{% else %}border-purple-200/80 bg-white/80 text-stone-700 hover:-translate-y-0.5 hover:border-purple-300 hover:bg-purple-50 dark:border-white/10 dark:bg-slate-900/75 dark:text-purple-100 dark:hover:bg-slate-900{% endif %}"
+                                >
+                                    По умолчанию
+                                </a>
+                                <a
+                                    href="{{ url_for('search_genre', genre=genre, exact_year=exact_year, year_from=year_from, year_to=year_to, page=1, sort='old') }}"
+                                    class="inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition {% if sort_mode == 'old' %}border-purple-600 bg-purple-600 text-white shadow-soft dark:border-purple-300 dark:bg-gradient-to-r dark:from-purple-400 dark:via-violet-400 dark:to-fuchsia-400 dark:text-slate-950{% else %}border-purple-200/80 bg-white/80 text-stone-700 hover:-translate-y-0.5 hover:border-purple-300 hover:bg-purple-50 dark:border-white/10 dark:bg-slate-900/75 dark:text-purple-100 dark:hover:bg-slate-900{% endif %}"
+                                >
+                                    Сначала старые
+                                </a>
+                                <a
+                                    href="{{ url_for('search_genre', genre=genre, exact_year=exact_year, year_from=year_from, year_to=year_to, page=1, sort='new') }}"
+                                    class="inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition {% if sort_mode == 'new' %}border-purple-600 bg-purple-600 text-white shadow-soft dark:border-purple-300 dark:bg-gradient-to-r dark:from-purple-400 dark:via-violet-400 dark:to-fuchsia-400 dark:text-slate-950{% else %}border-purple-200/80 bg-white/80 text-stone-700 hover:-translate-y-0.5 hover:border-purple-300 hover:bg-purple-50 dark:border-white/10 dark:bg-slate-900/75 dark:text-purple-100 dark:hover:bg-slate-900{% endif %}"
+                                >
+                                    Сначала новые
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        {% if keyword is defined and keyword %}
+                            <span class="inline-flex items-center rounded-full border border-purple-200/80 bg-purple-50 px-3 py-1 text-sm text-purple-800 dark:border-purple-300/20 dark:bg-purple-950/60 dark:text-purple-100">
+                                Запрос: {{ keyword }}
+                            </span>
+                        {% endif %}
+                        {% if genre is defined and genre %}
+                            <span class="inline-flex items-center rounded-full border border-purple-200/80 bg-purple-50 px-3 py-1 text-sm text-purple-800 dark:border-purple-300/20 dark:bg-purple-950/60 dark:text-purple-100">
+                                Жанр: {{ genre }}
+                            </span>
+                        {% endif %}
+                        {% if exact_year is defined and exact_year %}
+                            <span class="inline-flex items-center rounded-full border border-purple-200/80 bg-purple-50 px-3 py-1 text-sm text-purple-800 dark:border-purple-300/20 dark:bg-purple-950/60 dark:text-purple-100">
+                                Год: {{ exact_year }}
+                            </span>
+                        {% elif year_from is defined and year_to is defined and year_from and year_to %}
+                            <span class="inline-flex items-center rounded-full border border-purple-200/80 bg-purple-50 px-3 py-1 text-sm text-purple-800 dark:border-purple-300/20 dark:bg-purple-950/60 dark:text-purple-100">
+                                Годы: {{ year_from }} - {{ year_to }}
+                            </span>
+                        {% elif year_from is defined and year_from %}
+                            <span class="inline-flex items-center rounded-full border border-purple-200/80 bg-purple-50 px-3 py-1 text-sm text-purple-800 dark:border-purple-300/20 dark:bg-purple-950/60 dark:text-purple-100">
+                                Год от: {{ year_from }}
+                            </span>
+                        {% elif year_to is defined and year_to %}
+                            <span class="inline-flex items-center rounded-full border border-purple-200/80 bg-purple-50 px-3 py-1 text-sm text-purple-800 dark:border-purple-300/20 dark:bg-purple-950/60 dark:text-purple-100">
+                                Год до: {{ year_to }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                    {% for film_id, film_title, description, release_year in films %}
+                        <article class="flex h-full flex-col rounded-[24px] border border-purple-200/70 bg-white/85 p-5 shadow-soft transition hover:-translate-y-1 dark:border-purple-400/15 dark:bg-slate-900/80 dark:shadow-2xl dark:shadow-black/20">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div class="space-y-3">
+                                    <span class="inline-flex w-fit items-center rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-xs font-medium text-stone-600 dark:border-white/10 dark:bg-slate-950/90 dark:text-purple-100/75">
+                                        ID: {{ film_id }}
+                                    </span>
+                                    <h3 class="text-xl font-semibold leading-tight text-ink dark:text-white">
+                                        {{ film_title }}
+                                    </h3>
+                                </div>
+
+                                <span class="inline-flex items-center rounded-full border border-purple-200/80 bg-purple-100/80 px-3 py-1 text-sm font-medium text-purple-800 dark:border-purple-300/20 dark:bg-purple-950/60 dark:text-purple-100">
+                                    {{ release_year }}
+                                </span>
+                            </div>
+
+                            <p class="mt-4 flex-1 text-sm leading-7 text-stone-600 dark:text-purple-100/75">
+                                {{ description if description else "Описание для этого фильма не указано." }}
+                            </p>
+
+                            <div class="mt-5 border-t border-purple-100 pt-4 dark:border-white/10">
+                                <div class="flex items-center justify-between gap-3 text-sm">
+                                    <span class="text-stone-500 dark:text-purple-100/60">Год выпуска</span>
+                                    <span class="font-medium text-ink dark:text-white">{{ release_year }}</span>
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+
+                {% if keyword is defined %}
+                    <div class="mt-8 flex flex-col gap-4 rounded-[24px] border border-purple-200/70 bg-purple-50/70 p-5 dark:border-purple-400/15 dark:bg-slate-900/75 lg:flex-row lg:items-center lg:justify-between">
+                        <p class="text-sm font-semibold text-ink dark:text-white">
+                            Страница {{ page }} из {{ total_pages }}
+                        </p>
+
+                        <div class="flex flex-wrap gap-2">
+                            {% if page > 1 %}
+                                <a
+                                    href="{{ url_for('search_keyword', keyword=keyword, page=1, sort=sort_mode) }}"
+                                    class="inline-flex items-center justify-center rounded-full border border-purple-200/80 bg-white/80 px-4 py-2 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-white dark:border-white/10 dark:bg-slate-900/80 dark:text-purple-100 dark:hover:bg-slate-900"
+                                >
+                                    Начало
+                                </a>
+
+                                <a
+                                    href="{{ url_for('search_keyword', keyword=keyword, page=page - 1, sort=sort_mode) }}"
+                                    class="inline-flex items-center justify-center rounded-full border border-purple-200/80 bg-white/80 px-4 py-2 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-white dark:border-white/10 dark:bg-slate-900/80 dark:text-purple-100 dark:hover:bg-slate-900"
+                                >
+                                    Назад
+                                </a>
+                            {% endif %}
+
+                            {% if page < total_pages %}
+                                <a
+                                    href="{{ url_for('search_keyword', keyword=keyword, page=page + 1, sort=sort_mode) }}"
+                                    class="inline-flex items-center justify-center rounded-full border border-purple-600 bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition hover:-translate-y-0.5 dark:border-purple-300 dark:bg-gradient-to-r dark:from-purple-400 dark:via-violet-400 dark:to-fuchsia-400 dark:text-slate-950"
+                                >
+                                    Вперёд
+                                </a>
+
+                                <a
+                                    href="{{ url_for('search_keyword', keyword=keyword, page=total_pages, sort=sort_mode) }}"
+                                    class="inline-flex items-center justify-center rounded-full border border-purple-600 bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition hover:-translate-y-0.5 dark:border-purple-300 dark:bg-gradient-to-r dark:from-purple-400 dark:via-violet-400 dark:to-fuchsia-400 dark:text-slate-950"
+                                >
+                                    Конец
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if genre is defined and year_from is defined and year_to is defined %}
+                    <div class="mt-8 flex flex-col gap-4 rounded-[24px] border border-purple-200/70 bg-purple-50/70 p-5 dark:border-purple-400/15 dark:bg-slate-900/75 lg:flex-row lg:items-center lg:justify-between">
+                        <p class="text-sm font-semibold text-ink dark:text-white">
+                            Страница {{ page }} из {{ total_pages }}
+                        </p>
+
+                        <div class="flex flex-wrap gap-2">
+                            {% if page > 1 %}
+                                <a
+                                    href="{{ url_for('search_genre', genre=genre, exact_year=exact_year, year_from=year_from, year_to=year_to, page=1, sort=sort_mode) }}"
+                                    class="inline-flex items-center justify-center rounded-full border border-purple-200/80 bg-white/80 px-4 py-2 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-white dark:border-white/10 dark:bg-slate-900/80 dark:text-purple-100 dark:hover:bg-slate-900"
+                                >
+                                    Начало
+                                </a>
+
+                                <a
+                                    href="{{ url_for('search_genre', genre=genre, exact_year=exact_year, year_from=year_from, year_to=year_to, page=page - 1, sort=sort_mode) }}"
+                                    class="inline-flex items-center justify-center rounded-full border border-purple-200/80 bg-white/80 px-4 py-2 text-sm font-medium text-stone-700 transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-white dark:border-white/10 dark:bg-slate-900/80 dark:text-purple-100 dark:hover:bg-slate-900"
+                                >
+                                    Назад
+                                </a>
+                            {% endif %}
+
+                            {% if page < total_pages %}
+                                <a
+                                    href="{{ url_for('search_genre', genre=genre, exact_year=exact_year, year_from=year_from, year_to=year_to, page=page + 1, sort=sort_mode) }}"
+                                    class="inline-flex items-center justify-center rounded-full border border-purple-600 bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition hover:-translate-y-0.5 dark:border-purple-300 dark:bg-gradient-to-r dark:from-purple-400 dark:via-violet-400 dark:to-fuchsia-400 dark:text-slate-950"
+                                >
+                                    Вперёд
+                                </a>
+
+                                <a
+                                    href="{{ url_for('search_genre', genre=genre, exact_year=exact_year, year_from=year_from, year_to=year_to, page=total_pages, sort=sort_mode) }}"
+                                    class="inline-flex items-center justify-center rounded-full border border-purple-600 bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-soft transition hover:-translate-y-0.5 dark:border-purple-300 dark:bg-gradient-to-r dark:from-purple-400 dark:via-violet-400 dark:to-fuchsia-400 dark:text-slate-950"
+                                >
+                                    Конец
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="rounded-[28px] border border-amber-200/80 bg-amber-50/85 p-6 shadow-soft backdrop-blur-xl dark:border-purple-400/15 dark:bg-gradient-to-br dark:from-zinc-950 dark:via-slate-950 dark:to-purple-950/95 dark:backdrop-blur-none dark:shadow-2xl dark:shadow-black/20 md:p-8">
+                <div class="space-y-4">
+                    <h2 class="text-2xl font-semibold tracking-tight text-ink dark:text-white">
+                        Фильмы не найдены
+                    </h2>
+                    <p class="max-w-2xl text-sm leading-7 text-stone-600 dark:text-purple-100/75">
+                        Попробуйте изменить название фильма, выбрать другой жанр или указать другой год поиска.
+                    </p>
+                    <a
+                        href="{{ url_for('index') }}"
+                        class="inline-flex items-center justify-center rounded-full border border-purple-200/80 bg-white/80 px-5 py-3 text-sm font-semibold text-stone-700 transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-white dark:border-white/10 dark:bg-slate-900/80 dark:text-purple-100 dark:hover:bg-slate-900"
+                    >
+                        Вернуться к поиску
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+</section>
+{% endblock %}

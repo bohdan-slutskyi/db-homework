@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}{{ film.title }} | Film Search Project{% endblock %}
+
+{% block content %}
+<section class="space-y-6">
+    <div class="rounded-[28px] border border-purple-200/70 bg-white/75 p-6 shadow-soft backdrop-blur-xl dark:border-purple-400/15 dark:bg-gradient-to-br dark:from-zinc-950 dark:via-slate-950 dark:to-purple-950/95 dark:backdrop-blur-none dark:shadow-2xl dark:shadow-black/20 md:p-8">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div class="max-w-4xl space-y-4">
+                <a
+                    href="{{ request.headers.get('referer') or url_for('index') }}"
+                    class="inline-flex items-center gap-2 rounded-full border border-purple-200/80 bg-white/80 px-4 py-2 text-sm font-semibold text-stone-700 transition hover:-translate-y-0.5 hover:border-purple-300 hover:bg-purple-50 dark:border-white/10 dark:bg-slate-900/80 dark:text-purple-100 dark:hover:bg-slate-900"
+                >
+                    <span aria-hidden="true">←</span>
+                    <span>Назад к каталогу</span>
+                </a>
+
+                <div class="space-y-3">
+                    <h1 class="text-3xl font-semibold tracking-tight text-ink dark:text-white md:text-5xl">
+                        {{ film.title }}
+                    </h1>
+                    <p class="max-w-3xl text-sm leading-7 text-stone-600 dark:text-purple-100/75 md:text-base">
+                        {{ film.description if film.description else "Описание для этого фильма не указано." }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 lg:max-w-xs lg:justify-end">
+                <span class="inline-flex items-center rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-sm font-medium text-stone-600 dark:border-white/10 dark:bg-slate-950/90 dark:text-purple-100/75">
+                    ID: {{ film.film_id }}
+                </span>
+                {% if film.release_year %}
+                    <span class="inline-flex items-center rounded-full border border-purple-200/80 bg-purple-100/80 px-3 py-1 text-sm font-medium text-purple-800 dark:border-purple-300/20 dark:bg-purple-950/60 dark:text-purple-100">
+                        {{ film.release_year }}
+                    </span>
+                {% endif %}
+                {% if film.rating %}
+                    <span class="inline-flex items-center rounded-full border border-fuchsia-200/80 bg-fuchsia-100/80 px-3 py-1 text-sm font-medium text-fuchsia-800 dark:border-fuchsia-300/20 dark:bg-fuchsia-950/50 dark:text-fuchsia-100">
+                        {{ film.rating }}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.9fr)]">
+        <div class="space-y-6">
+            <div class="rounded-[28px] border border-purple-200/70 bg-white/75 p-6 shadow-soft backdrop-blur-xl dark:border-purple-400/15 dark:bg-gradient-to-br dark:from-zinc-950 dark:via-slate-950 dark:to-purple-950/95 dark:backdrop-blur-none dark:shadow-2xl dark:shadow-black/20 md:p-8">
+                <div class="space-y-4">
+                    <h2 class="text-2xl font-semibold tracking-tight text-ink dark:text-white">
+                        Описание
+                    </h2>
+                    <p class="text-sm leading-7 text-stone-600 dark:text-purple-100/75 md:text-base">
+                        {{ film.description if film.description else "Описание для этого фильма не указано." }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="rounded-[28px] border border-purple-200/70 bg-white/75 p-6 shadow-soft backdrop-blur-xl dark:border-purple-400/15 dark:bg-gradient-to-br dark:from-zinc-950 dark:via-slate-950 dark:to-purple-950/95 dark:backdrop-blur-none dark:shadow-2xl dark:shadow-black/20 md:p-8">
+                <div class="space-y-4">
+                    <h2 class="text-2xl font-semibold tracking-tight text-ink dark:text-white">
+                        Актёры
+                    </h2>
+
+                    {% if film.actors %}
+                        <div class="flex flex-wrap gap-2">
+                            {% for actor_name in film.actors %}
+                                <span class="inline-flex items-center rounded-full border border-purple-200/80 bg-purple-50 px-3 py-1 text-sm text-purple-800 dark:border-purple-300/20 dark:bg-purple-950/60 dark:text-purple-100">
+                                    {{ actor_name }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-sm text-stone-600 dark:text-purple-100/75">
+                            Актёры для этого фильма не указаны.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="rounded-[28px] border border-purple-200/70 bg-white/75 p-6 shadow-soft backdrop-blur-xl dark:border-purple-400/15 dark:bg-gradient-to-br dark:from-zinc-950 dark:via-slate-950 dark:to-purple-950/95 dark:backdrop-blur-none dark:shadow-2xl dark:shadow-black/20 md:p-8">
+                <div class="space-y-4">
+                    <h2 class="text-2xl font-semibold tracking-tight text-ink dark:text-white">
+                        Детали
+                    </h2>
+
+                    <dl class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                        <div class="rounded-2xl border border-purple-100 bg-purple-50/70 px-4 py-3 dark:border-white/10 dark:bg-slate-900/75">
+                            <dt class="text-xs uppercase tracking-[0.18em] text-stone-500 dark:text-purple-100/55">ID</dt>
+                            <dd class="mt-2 text-lg font-semibold text-ink dark:text-white">{{ film.film_id }}</dd>
+                        </div>
+
+                        {% if film.release_year %}
+                            <div class="rounded-2xl border border-purple-100 bg-purple-50/70 px-4 py-3 dark:border-white/10 dark:bg-slate-900/75">
+                                <dt class="text-xs uppercase tracking-[0.18em] text-stone-500 dark:text-purple-100/55">Год выпуска</dt>
+                                <dd class="mt-2 text-lg font-semibold text-ink dark:text-white">{{ film.release_year }}</dd>
+                            </div>
+                        {% endif %}
+
+                        {% if film.rating %}
+                            <div class="rounded-2xl border border-purple-100 bg-purple-50/70 px-4 py-3 dark:border-white/10 dark:bg-slate-900/75">
+                                <dt class="text-xs uppercase tracking-[0.18em] text-stone-500 dark:text-purple-100/55">Рейтинг</dt>
+                                <dd class="mt-2 text-lg font-semibold text-ink dark:text-white">{{ film.rating }}</dd>
+                            </div>
+                        {% endif %}
+
+                        {% if film.length %}
+                            <div class="rounded-2xl border border-purple-100 bg-purple-50/70 px-4 py-3 dark:border-white/10 dark:bg-slate-900/75">
+                                <dt class="text-xs uppercase tracking-[0.18em] text-stone-500 dark:text-purple-100/55">Длительность</dt>
+                                <dd class="mt-2 text-lg font-semibold text-ink dark:text-white">{{ film.length }} мин.</dd>
+                            </div>
+                        {% endif %}
+
+                        {% if film.rental_duration %}
+                            <div class="rounded-2xl border border-purple-100 bg-purple-50/70 px-4 py-3 dark:border-white/10 dark:bg-slate-900/75">
+                                <dt class="text-xs uppercase tracking-[0.18em] text-stone-500 dark:text-purple-100/55">Срок аренды</dt>
+                                <dd class="mt-2 text-lg font-semibold text-ink dark:text-white">{{ film.rental_duration }} дн.</dd>
+                            </div>
+                        {% endif %}
+
+                        {% if film.rental_rate is not none %}
+                            <div class="rounded-2xl border border-purple-100 bg-purple-50/70 px-4 py-3 dark:border-white/10 dark:bg-slate-900/75">
+                                <dt class="text-xs uppercase tracking-[0.18em] text-stone-500 dark:text-purple-100/55">Стоимость аренды</dt>
+                                <dd class="mt-2 text-lg font-semibold text-ink dark:text-white">${{ film.rental_rate }}</dd>
+                            </div>
+                        {% endif %}
+
+                        {% if film.replacement_cost is not none %}
+                            <div class="rounded-2xl border border-purple-100 bg-purple-50/70 px-4 py-3 dark:border-white/10 dark:bg-slate-900/75">
+                                <dt class="text-xs uppercase tracking-[0.18em] text-stone-500 dark:text-purple-100/55">Стоимость замены</dt>
+                                <dd class="mt-2 text-lg font-semibold text-ink dark:text-white">${{ film.replacement_cost }}</dd>
+                            </div>
+                        {% endif %}
+
+                        {% if film.language %}
+                            <div class="rounded-2xl border border-purple-100 bg-purple-50/70 px-4 py-3 dark:border-white/10 dark:bg-slate-900/75">
+                                <dt class="text-xs uppercase tracking-[0.18em] text-stone-500 dark:text-purple-100/55">Язык</dt>
+                                <dd class="mt-2 text-lg font-semibold text-ink dark:text-white">{{ film.language }}</dd>
+                            </div>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+
+            <div class="rounded-[28px] border border-purple-200/70 bg-white/75 p-6 shadow-soft backdrop-blur-xl dark:border-purple-400/15 dark:bg-gradient-to-br dark:from-zinc-950 dark:via-slate-950 dark:to-purple-950/95 dark:backdrop-blur-none dark:shadow-2xl dark:shadow-black/20 md:p-8">
+                <div class="space-y-4">
+                    <h2 class="text-2xl font-semibold tracking-tight text-ink dark:text-white">
+                        Жанры и особенности
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm font-semibold text-ink dark:text-white">Жанры</p>
+                            {% if film.categories %}
+                                <div class="mt-2 flex flex-wrap gap-2">
+                                    {% for category_name in film.categories %}
+                                        <span class="inline-flex items-center rounded-full border border-violet-200/80 bg-violet-100/80 px-3 py-1 text-sm text-violet-800 dark:border-violet-300/20 dark:bg-violet-950/50 dark:text-violet-100">
+                                            {{ category_name }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="mt-2 text-sm text-stone-600 dark:text-purple-100/75">
+                                    Жанры для этого фильма не указаны.
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <p class="text-sm font-semibold text-ink dark:text-white">Специальные возможности</p>
+                            {% if film.special_features %}
+                                <div class="mt-2 flex flex-wrap gap-2">
+                                    {% for feature_name in film.special_features %}
+                                        <span class="inline-flex items-center rounded-full border border-fuchsia-200/80 bg-fuchsia-100/80 px-3 py-1 text-sm text-fuchsia-800 dark:border-fuchsia-300/20 dark:bg-fuchsia-950/50 dark:text-fuchsia-100">
+                                            {{ feature_name }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="mt-2 text-sm text-stone-600 dark:text-purple-100/75">
+                                    Специальные возможности для этого фильма не указаны.
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

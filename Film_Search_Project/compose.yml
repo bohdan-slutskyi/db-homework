@@ -1,3 +1,4 @@
+# Совместно запускает контейнеры FastAPI-приложения и MongoDB.
 services:
   app:
     build: .

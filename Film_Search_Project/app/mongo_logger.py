@@ -1,3 +1,5 @@
+"""Сохраняет поисковые запросы в MongoDB и формирует статистику."""
+
 import json
 import os
 from collections.abc import Callable

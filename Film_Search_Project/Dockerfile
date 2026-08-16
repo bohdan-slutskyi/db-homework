@@ -1,3 +1,4 @@
+# Собирает контейнер FastAPI-приложения с Python-зависимостями через uv.
 FROM python:3.12-slim
 
 WORKDIR /app

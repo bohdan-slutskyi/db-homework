@@ -1,3 +1,5 @@
+"""Подключается к MySQL Sakila и выполняет SQL-поиск фильмов."""
+
 import os
 from decimal import Decimal
 

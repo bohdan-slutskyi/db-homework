@@ -25,6 +25,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 
+# Настройка FastAPI, HTML-шаблонов и файлового логирования.
 app = FastAPI(
     title="Film Search Project",
     description="Film search application with MySQL Sakila and MongoDB.",
@@ -66,6 +67,7 @@ def template_url_for(endpoint: str, **values: object) -> str:
 templates.env.globals["url_for"] = template_url_for
 
 
+# Безопасная обработка ошибок MySQL для HTML-страниц и JSON API.
 MYSQL_ERROR_MESSAGE = (
     "Сервис поиска временно не может подключиться к MySQL. "
     "Повторите попытку позже или проверьте параметры подключения."
@@ -110,6 +112,7 @@ def handle_mysql_configuration_error(
     return build_mysql_error_response(request, error)
 
 
+# HTML-маршруты приложения.
 @app.get("/")
 def index(
     request: Request,

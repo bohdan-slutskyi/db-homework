@@ -349,7 +349,7 @@ http://localhost:5001/
 Быстрая проверка главной страницы, healthcheck, JSON-поисков и статистики:
 
 ```bash
-./smoke_test.sh
+cd "/Users/core/Dev/python-homework/Film_Search_Project" && ./smoke_test.sh
 ```
 
 Ожидаемый итог:
